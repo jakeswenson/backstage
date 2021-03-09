@@ -4207,10 +4207,10 @@
     puka "^1.0.1"
     read-package-json-fast "^2.0.1"
 
-"@octokit/auth-app@^2.10.5":
-  version "2.10.5"
-  resolved "https://registry.npmjs.org/@octokit/auth-app/-/auth-app-2.10.5.tgz#85d69cb96818f5da34bf0b81bb637d3675ad4e9a"
-  integrity sha512-6yXyjtcBWpuPYSdZN8z8IIjGSqkPmiJzdmCdod8at41ANB1FtaKbUIDL5+IkG+svv68NIYs+XORbhBRFXYB3bw==
+"@octokit/auth-app@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.npmjs.org/@octokit/auth-app/-/auth-app-3.0.0.tgz#67bb0939588e8edc2be52b6ed957078fc8577faa"
+  integrity sha512-7280Oz7zsyF1cRuJEMJGG0H3zenOKY44P2QZRwN/21qRqyI+aQ0wM7IQny6uQk/xow36B7JNu2U2GtcgEdx8iA==
   dependencies:
     "@octokit/request" "^5.4.11"
     "@octokit/request-error" "^2.0.0"
