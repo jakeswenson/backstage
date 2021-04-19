@@ -154,7 +154,20 @@ to the name of the bucket you just created.</p>
     <span class="hljs-attr">awsS3:</span>
       <span class="hljs-attr">bucketName:</span> <span class="hljs-string">'name-of-techdocs-storage-bucket'</span>
 </code></pre>
-<p><strong>3a. (Recommended) Setup authentication the AWS way, using environment
+<p><strong>3. Create minimal AWS IAM policies to manage TechDocs</strong></p>
+<p>To <em>write</em> TechDocs into the S3 bucket the IAM policy needs to have at a minimum
+permissions to:</p>
+<ul>
+<li><code>s3:ListBucket</code> to retrieve bucket metadata</li>
+<li><code>s3:PutObject</code> to upload files to the bucket</li>
+</ul>
+<p>To <em>read</em> TechDocs from the S3 bucket the IAM policy needs to have at a minimum
+permissions to:</p>
+<ul>
+<li><code>s3:ListBucket</code> - To retrieve bucket metadata</li>
+<li><code>s3:GetObject</code> - To retrieve files from the bucket</li>
+</ul>
+<p><strong>4a. (Recommended) Setup authentication the AWS way, using environment
 variables</strong></p>
 <p>You should follow the
 <a href="https://docs.aws.amazon.com/general/latest/gr/aws-access-keys-best-practices.html">AWS security best practices guide for authentication</a>.</p>
@@ -178,7 +191,7 @@ more in
 <a href="https://docs.aws.amazon.com/general/latest/gr/aws-access-keys-best-practices.html#use-roles">official AWS documentation for using IAM roles.</a>.</p>
 <p>The AWS Region of the bucket is optional since TechDocs uses AWS SDK V2 and not
 V3.</p>
-<p><strong>3b. Authentication using app-config.yaml</strong></p>
+<p><strong>4b. Authentication using app-config.yaml</strong></p>
 <p>AWS credentials and region can be provided to the AWS SDK via <code>app-config.yaml</code>.
 If the configs below are present, they will be used over existing <code>AWS_*</code>
 environment variables and the <code>~/.aws/credentials</code> config file.</p>
@@ -194,7 +207,7 @@ environment variables and the <code>~/.aws/credentials</code> config file.</p>
 </code></pre>
 <p>Refer to the
 <a href="https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/getting-your-credentials.html">official AWS documentation for obtaining the credentials</a>.</p>
-<p><strong>3c. Authentication using an assumed role</strong> Users with multiple AWS accounts
+<p><strong>4c. Authentication using an assumed role</strong> Users with multiple AWS accounts
 may want to use a role for S3 storage that is in a different AWS account. Using
 the <code>roleArn</code> parameter as seen below, you can instruct the TechDocs publisher
 to assume a role before accessing S3.</p>
@@ -210,7 +223,7 @@ to assume a role before accessing S3.</p>
 <p>Note: Assuming a role requires that primary credentials are already configured
 at <code>AWS.config.credentials</code>. Read more about
 <a href="https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html">assuming roles in AWS</a>.</p>
-<p><strong>4. That's it!</strong></p>
+<p><strong>5. That's it!</strong></p>
 <p>Your Backstage app is now ready to use AWS S3 for TechDocs, to store and read
 the static generated documentation files. When you start the backend of the app,
 you should be able to see
@@ -327,7 +340,7 @@ store and read the static generated documentation files. When you start the
 backend of the app, you should be able to see
 <code>techdocs info Successfully connected to the OpenStack Swift Storage container</code>
 in the logs.</p>
-</span></div></article></div><div class="docLastUpdate"><em>Last updated on 4/17/2021</em></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/features/techdocs/configuration"><span class="arrow-prev">← </span><span class="function-name-prevnext">TechDocs Configuration Options</span></a><a class="docs-next button" href="/docs/features/techdocs/configuring-ci-cd"><span class="function-name-prevnext">Configuring CI/CD to generate and publish TechDocs sites</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#configuring-google-gcs-bucket-with-techdocs">Configuring Google GCS Bucket with TechDocs</a></li><li><a href="#configuring-aws-s3-bucket-with-techdocs">Configuring AWS S3 Bucket with TechDocs</a></li><li><a href="#configuring-azure-blob-storage-container-with-techdocs">Configuring Azure Blob Storage Container with TechDocs</a></li><li><a href="#configuring-openstack-swift-container-with-techdocs">Configuring OpenStack Swift Container with TechDocs</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footer-title"><a href="/"><h2 class="footerLogo"></h2></a></div><div><h5>Docs</h5><a href="/docs/overview/what-is-backstage">What is Backstage?</a><a href="/docs/getting-started/">Getting started</a><a href="/docs/features/software-catalog/software-catalog-overview">Service Catalog</a><a href="/docs/plugins/create-a-plugin">Create a Plugin</a><a href="/docs/dls/design">Designing for Backstage</a></div><div><h5>Community</h5><a href="https://discord.gg/MUpMjP2">Support chatroom</a><a href="https://github.com/backstage/backstage/blob/master/CONTRIBUTING.md">Contributing</a><a href="https://mailchi.mp/spotify/backstage-community">Subscribe to our newsletter</a><a href="https://www.cncf.io/sandbox-projects/">CNCF Sandbox</a></div><div><h5>More</h5><a href="https://spotify.github.io/">Open Source @ Spotify</a><a href="https://engineering.atspotify.com/">Spotify Engineering Blog</a><a href="https://developer.spotify.com/">Spotify for Developers</a><a href="https://github.com/backstage/backstage">GitHub</a><a class="github-button" href="https://github.com/backstage/backstage" data-icon="octicon-star" data-count-href="/backstage/backstage/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a><div class="social"><a href="https://twitter.com/SpotifyEng" class="twitter-follow-button">Follow @SpotifyEng</a></div></div></section><p style="text-align:center"><a href="https://spotify.github.io">Made with ❤️  at Spotify</a></p><p class="copyright">Copyright © 2021 Backstage Project Authors. All rights reserved. The Linux Foundation has registered trademarks and uses trademarks. For a list of trademarks of The Linux Foundation, please see our Trademark Usage page: https://www.linuxfoundation.org/trademark-usage</p></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>window.twttr=(function(d,s, id){var js,fjs=d.getElementsByTagName(s)[0],t=window.twttr||{};if(d.getElementById(id))return t;js=d.createElement(s);js.id=id;js.src='https://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js, fjs);t._e = [];t.ready = function(f) {t._e.push(f);};return t;}(document, 'script', 'twitter-wjs'));</script><script>
+</span></div></article></div><div class="docLastUpdate"><em>Last updated on 4/19/2021</em></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/features/techdocs/configuration"><span class="arrow-prev">← </span><span class="function-name-prevnext">TechDocs Configuration Options</span></a><a class="docs-next button" href="/docs/features/techdocs/configuring-ci-cd"><span class="function-name-prevnext">Configuring CI/CD to generate and publish TechDocs sites</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#configuring-google-gcs-bucket-with-techdocs">Configuring Google GCS Bucket with TechDocs</a></li><li><a href="#configuring-aws-s3-bucket-with-techdocs">Configuring AWS S3 Bucket with TechDocs</a></li><li><a href="#configuring-azure-blob-storage-container-with-techdocs">Configuring Azure Blob Storage Container with TechDocs</a></li><li><a href="#configuring-openstack-swift-container-with-techdocs">Configuring OpenStack Swift Container with TechDocs</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footer-title"><a href="/"><h2 class="footerLogo"></h2></a></div><div><h5>Docs</h5><a href="/docs/overview/what-is-backstage">What is Backstage?</a><a href="/docs/getting-started/">Getting started</a><a href="/docs/features/software-catalog/software-catalog-overview">Service Catalog</a><a href="/docs/plugins/create-a-plugin">Create a Plugin</a><a href="/docs/dls/design">Designing for Backstage</a></div><div><h5>Community</h5><a href="https://discord.gg/MUpMjP2">Support chatroom</a><a href="https://github.com/backstage/backstage/blob/master/CONTRIBUTING.md">Contributing</a><a href="https://mailchi.mp/spotify/backstage-community">Subscribe to our newsletter</a><a href="https://www.cncf.io/sandbox-projects/">CNCF Sandbox</a></div><div><h5>More</h5><a href="https://spotify.github.io/">Open Source @ Spotify</a><a href="https://engineering.atspotify.com/">Spotify Engineering Blog</a><a href="https://developer.spotify.com/">Spotify for Developers</a><a href="https://github.com/backstage/backstage">GitHub</a><a class="github-button" href="https://github.com/backstage/backstage" data-icon="octicon-star" data-count-href="/backstage/backstage/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a><div class="social"><a href="https://twitter.com/SpotifyEng" class="twitter-follow-button">Follow @SpotifyEng</a></div></div></section><p style="text-align:center"><a href="https://spotify.github.io">Made with ❤️  at Spotify</a></p><p class="copyright">Copyright © 2021 Backstage Project Authors. All rights reserved. The Linux Foundation has registered trademarks and uses trademarks. For a list of trademarks of The Linux Foundation, please see our Trademark Usage page: https://www.linuxfoundation.org/trademark-usage</p></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>window.twttr=(function(d,s, id){var js,fjs=d.getElementsByTagName(s)[0],t=window.twttr||{};if(d.getElementById(id))return t;js=d.createElement(s);js.id=id;js.src='https://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js, fjs);t._e = [];t.ready = function(f) {t._e.push(f);};return t;}(document, 'script', 'twitter-wjs'));</script><script>
                 document.addEventListener('keyup', function(e) {
                   if (e.target !== document.body) {
                     return;
