@@ -3689,14 +3689,14 @@
     read-package-json-fast "^2.0.1"
 
 "@octokit/auth-app@^3.4.0":
-  version "3.4.0"
-  resolved "https://registry.npmjs.org/@octokit/auth-app/-/auth-app-3.4.0.tgz#af9f68512e7b8dd071b49e1470a1ddf88ff6a3a3"
-  integrity sha512-zBVgTnLJb0uoNMGCpcDkkAbPeavHX7oAjJkaDv2nqMmsXSsCw4AbUhjl99EtJQG/JqFY/kLFHM9330Wn0k70+g==
+  version "3.5.0"
+  resolved "https://registry.npmjs.org/@octokit/auth-app/-/auth-app-3.5.0.tgz#e12647fd0a4b344ad5e371bcd6d37e836563fc31"
+  integrity sha512-U62Ys2qeViLcLRjbwEjfo2wk7bDA5IcRuUJKbhtSDNhZheV227zRPfeCcazbfArY5XDDFvTFZppV3eXLQotMzQ==
   dependencies:
-    "@octokit/auth-oauth-app" "^4.1.0"
+    "@octokit/auth-oauth-app" "^4.3.0"
     "@octokit/auth-oauth-user" "^1.2.3"
-    "@octokit/request" "^5.4.11"
-    "@octokit/request-error" "^2.0.0"
+    "@octokit/request" "^5.6.0"
+    "@octokit/request-error" "^2.1.0"
     "@octokit/types" "^6.0.3"
     "@types/lru-cache" "^5.1.0"
     deprecation "^2.3.1"
@@ -3704,10 +3704,10 @@
     universal-github-app-jwt "^1.0.1"
     universal-user-agent "^6.0.0"
 
-"@octokit/auth-oauth-app@^4.1.0":
-  version "4.1.2"
-  resolved "https://registry.npmjs.org/@octokit/auth-oauth-app/-/auth-oauth-app-4.1.2.tgz#bf3ff30c260e6e9f10b950386f279befb8fe907d"
-  integrity sha512-bdNGNRmuDJjKoHla3mUGtkk/xcxKngnQfBEnyk+7VwMqrABKvQB1wQRSrwSWkPPUX7Lcj2ttkPAPG7+iBkMRnw==
+"@octokit/auth-oauth-app@^4.3.0":
+  version "4.3.0"
+  resolved "https://registry.npmjs.org/@octokit/auth-oauth-app/-/auth-oauth-app-4.3.0.tgz#de02f184360ffd7cfccef861053784fc4410e7ea"
+  integrity sha512-cETmhmOQRHCz6cLP7StThlJROff3A/ln67Q961GuIr9zvyFXZ4lIJy9RE6Uw5O7D8IXWPU3jhDnG47FTSGQr8Q==
   dependencies:
     "@octokit/auth-oauth-device" "^3.1.1"
     "@octokit/auth-oauth-user" "^1.2.1"
@@ -3827,16 +3827,7 @@
     "@octokit/types" "^6.16.2"
     deprecation "^2.3.1"
 
-"@octokit/request-error@^2.0.0", "@octokit/request-error@^2.0.5":
-  version "2.0.5"
-  resolved "https://registry.npmjs.org/@octokit/request-error/-/request-error-2.0.5.tgz#72cc91edc870281ad583a42619256b380c600143"
-  integrity sha512-T/2wcCFyM7SkXzNoyVNWjyVlUwBvW3igM3Btr/eKYiPmucXTtkxt2RBsf6gn3LTzaLSLTQtNmvg+dGsOxQrjZg==
-  dependencies:
-    "@octokit/types" "^6.0.3"
-    deprecation "^2.0.0"
-    once "^1.4.0"
-
-"@octokit/request-error@^2.1.0":
+"@octokit/request-error@^2.0.5", "@octokit/request-error@^2.1.0":
   version "2.1.0"
   resolved "https://registry.npmjs.org/@octokit/request-error/-/request-error-2.1.0.tgz#9e150357831bfc788d13a4fd4b1913d60c74d677"
   integrity sha512-1VIvgXxs9WHSjicsRwq8PlR2LR2x6DwsJAaFgzdi0JfJoGSO8mYI/cHJQ+9FbN21aa+DrgNLnwObmyeSC8Rmpg==
@@ -3845,7 +3836,7 @@
     deprecation "^2.0.0"
     once "^1.4.0"
 
-"@octokit/request@^5.3.0", "@octokit/request@^5.4.11", "@octokit/request@^5.4.12", "@octokit/request@^5.4.14", "@octokit/request@^5.6.0":
+"@octokit/request@^5.3.0", "@octokit/request@^5.4.12", "@octokit/request@^5.4.14", "@octokit/request@^5.6.0":
   version "5.6.0"
   resolved "https://registry.npmjs.org/@octokit/request/-/request-5.6.0.tgz#6084861b6e4fa21dc40c8e2a739ec5eff597e672"
   integrity sha512-4cPp/N+NqmaGQwbh3vUsYqokQIzt7VjsgTYVXiwpUP2pxd5YiZB2XuTedbb0SPtv9XS7nzAKjAuQxmY8/aZkiA==
