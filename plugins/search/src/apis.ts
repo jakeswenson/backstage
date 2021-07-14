@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-import { createApiRef, DiscoveryApi, IdentityApi } from '@backstage/core';
+import {
+  createApiRef,
+  DiscoveryApi,
+  IdentityApi,
+} from '@backstage/core-plugin-api';
+import { ResponseError } from '@backstage/errors';
 import { SearchQuery, SearchResultSet } from '@backstage/search-common';
 import qs from 'qs';
 
@@ -48,6 +53,11 @@ export class SearchClient implements SearchApi {
     const response = await fetch(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
+
+    if (!response.ok) {
+      throw await ResponseError.fromResponse(response);
+    }
+
     return response.json();
   }
 }

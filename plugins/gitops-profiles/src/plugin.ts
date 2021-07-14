@@ -15,30 +15,22 @@
  */
 
 import {
-  createPlugin,
-  createApiFactory,
-  createRoutableExtension,
-} from '@backstage/core';
-import ProfileCatalog from './components/ProfileCatalog';
-import ClusterPage from './components/ClusterPage';
-import ClusterList from './components/ClusterList';
-import {
   gitOpsClusterListRoute,
   gitOpsClusterDetailsRoute,
   gitOpsClusterCreateRoute,
 } from './routes';
 import { gitOpsApiRef, GitOpsRestApi } from './api';
+import {
+  createPlugin,
+  createApiFactory,
+  createRoutableExtension,
+} from '@backstage/core-plugin-api';
 
 export const gitopsProfilesPlugin = createPlugin({
   id: 'gitops-profiles',
   apis: [
     createApiFactory(gitOpsApiRef, new GitOpsRestApi('http://localhost:3008')),
   ],
-  register({ router }) {
-    router.addRoute(gitOpsClusterListRoute, ClusterList);
-    router.addRoute(gitOpsClusterDetailsRoute, ClusterPage);
-    router.addRoute(gitOpsClusterCreateRoute, ProfileCatalog);
-  },
   routes: {
     listPage: gitOpsClusterListRoute,
     detailsPage: gitOpsClusterDetailsRoute,

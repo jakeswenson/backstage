@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+import { renderInTestApp } from '@backstage/test-utils';
+import { waitFor } from '@testing-library/react';
 import React from 'react';
-import { render, waitFor } from '@testing-library/react';
-
-import { SearchResult } from './SearchResult';
 import { useSearch } from '../SearchContext';
+import { SearchResult } from './SearchResult';
 
 jest.mock('../SearchContext', () => ({
   ...jest.requireActual('../SearchContext'),
@@ -33,7 +33,9 @@ describe('SearchResult', () => {
       result: { loading: true },
     });
 
-    const { getByRole } = render(<SearchResult>{() => <></>}</SearchResult>);
+    const { getByRole } = await renderInTestApp(
+      <SearchResult>{() => <></>}</SearchResult>,
+    );
 
     await waitFor(() => {
       expect(getByRole('progressbar')).toBeInTheDocument();
@@ -41,26 +43,30 @@ describe('SearchResult', () => {
   });
 
   it('Alert rendered on Error state', async () => {
-    const error = 'error';
+    const error = new Error('some error');
     (useSearch as jest.Mock).mockReturnValueOnce({
       result: { loading: false, error },
     });
 
-    const { getByRole } = render(<SearchResult>{() => <></>}</SearchResult>);
+    const { getByRole } = await renderInTestApp(
+      <SearchResult>{() => <></>}</SearchResult>,
+    );
 
     await waitFor(() => {
       expect(getByRole('alert')).toHaveTextContent(
-        `Error encountered while fetching search results. ${error}`,
+        new RegExp(`Error encountered while fetching search results.*${error}`),
       );
     });
   });
 
-  it('On empty result value state', async () => {
+  it('On no result value state', async () => {
     (useSearch as jest.Mock).mockReturnValueOnce({
       result: { loading: false, error: '', value: undefined },
     });
 
-    const { getByRole } = render(<SearchResult>{() => <></>}</SearchResult>);
+    const { getByRole } = await renderInTestApp(
+      <SearchResult>{() => <></>}</SearchResult>,
+    );
 
     await waitFor(() => {
       expect(
@@ -69,12 +75,28 @@ describe('SearchResult', () => {
     });
   });
 
-  it('Calls children with results set to result.value', () => {
+  it('On empty result value state', async () => {
     (useSearch as jest.Mock).mockReturnValueOnce({
       result: { loading: false, error: '', value: { results: [] } },
     });
 
-    render(
+    const { getByRole } = await renderInTestApp(
+      <SearchResult>{() => <></>}</SearchResult>,
+    );
+
+    await waitFor(() => {
+      expect(
+        getByRole('heading', { name: 'Sorry, no results were found' }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('Calls children with results set to result.value', async () => {
+    (useSearch as jest.Mock).mockReturnValueOnce({
+      result: { loading: false, error: '', value: { results: [] } },
+    });
+
+    await renderInTestApp(
       <SearchResult>
         {({ results }) => {
           expect(results).toEqual([]);

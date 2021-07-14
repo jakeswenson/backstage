@@ -15,8 +15,8 @@
  */
 
 import { EntityName } from '@backstage/catalog-model';
-import { createApiRef } from '@backstage/core';
 import { TechDocsEntityMetadata, TechDocsMetadata } from './types';
+import { createApiRef } from '@backstage/core-plugin-api';
 
 export const techdocsStorageApiRef = createApiRef<TechDocsStorageApi>({
   id: 'plugin.techdocs.storageservice',
@@ -28,14 +28,17 @@ export const techdocsApiRef = createApiRef<TechDocsApi>({
   description: 'Used to make requests towards techdocs API',
 });
 
-export type SyncResult = 'cached' | 'updated' | 'timeout';
+export type SyncResult = 'cached' | 'updated';
 
 export interface TechDocsStorageApi {
   getApiOrigin(): Promise<string>;
   getStorageUrl(): Promise<string>;
   getBuilder(): Promise<string>;
   getEntityDocs(entityId: EntityName, path: string): Promise<string>;
-  syncEntityDocs(entityId: EntityName): Promise<SyncResult>;
+  syncEntityDocs(
+    entityId: EntityName,
+    logHandler?: (line: string) => void,
+  ): Promise<SyncResult>;
   getBaseUrl(
     oldBaseUrl: string,
     entityId: EntityName,

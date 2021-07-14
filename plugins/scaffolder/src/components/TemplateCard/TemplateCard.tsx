@@ -16,9 +16,8 @@
 import {
   Entity,
   RELATION_OWNED_BY,
-  TemplateEntityV1alpha1,
+  TemplateEntityV1beta2,
 } from '@backstage/catalog-model';
-import { Button, ItemCardHeader, useApi, useRouteRef } from '@backstage/core';
 import {
   ScmIntegrationIcon,
   scmIntegrationsApiRef,
@@ -48,6 +47,9 @@ import React from 'react';
 import { generatePath } from 'react-router';
 import { rootRouteRef } from '../../routes';
 import { FavouriteTemplate } from '../FavouriteTemplate/FavouriteTemplate';
+
+import { Button, ItemCardHeader } from '@backstage/core-components';
+import { useApi, useRouteRef } from '@backstage/core-plugin-api';
 
 const useStyles = makeStyles(theme => ({
   cardHeader: {
@@ -91,7 +93,7 @@ const useDeprecationStyles = makeStyles(theme => ({
 }));
 
 export type TemplateCardProps = {
-  template: TemplateEntityV1alpha1;
+  template: TemplateEntityV1beta2;
   deprecated?: boolean;
 };
 
@@ -104,7 +106,7 @@ type TemplateProps = {
 };
 
 const getTemplateCardProps = (
-  template: TemplateEntityV1alpha1,
+  template: TemplateEntityV1beta2,
 ): TemplateProps & { key: string } => {
   return {
     key: template.metadata.uid!,

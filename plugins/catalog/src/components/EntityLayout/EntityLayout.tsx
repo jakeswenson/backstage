@@ -20,16 +20,10 @@ import {
   RELATION_OWNED_BY,
 } from '@backstage/catalog-model';
 import {
+  useElementFilter,
   attachComponentData,
-  Content,
-  Header,
-  HeaderLabel,
   IconComponent,
-  Page,
-  Progress,
-  RoutedTabs,
-} from '@backstage/core';
-import { useElementFilter } from '@backstage/core-plugin-api';
+} from '@backstage/core-plugin-api';
 import {
   EntityContext,
   EntityRefLinks,
@@ -43,6 +37,14 @@ import { useNavigate } from 'react-router';
 import { EntityContextMenu } from '../EntityContextMenu/EntityContextMenu';
 import { FavouriteEntity } from '../FavouriteEntity/FavouriteEntity';
 import { UnregisterEntityDialog } from '../UnregisterEntityDialog/UnregisterEntityDialog';
+import {
+  Content,
+  Header,
+  HeaderLabel,
+  Page,
+  Progress,
+  RoutedTabs,
+} from '@backstage/core-components';
 
 type SubRoute = {
   path: string;
@@ -130,8 +132,14 @@ type ExtraContextMenuItem = {
   onClick: () => void;
 };
 
+// unstable context menu option, eg: disable the unregister entity menu
+type contextMenuOptions = {
+  disableUnregister: boolean;
+};
+
 type EntityLayoutProps = {
   UNSTABLE_extraContextMenuItems?: ExtraContextMenuItem[];
+  UNSTABLE_contextMenuOptions?: contextMenuOptions;
   children?: React.ReactNode;
 };
 
@@ -152,6 +160,7 @@ type EntityLayoutProps = {
  */
 export const EntityLayout = ({
   UNSTABLE_extraContextMenuItems,
+  UNSTABLE_contextMenuOptions,
   children,
 }: EntityLayoutProps) => {
   const { kind, namespace, name } = useEntityCompoundName();
@@ -208,6 +217,7 @@ export const EntityLayout = ({
             <EntityLabels entity={entity} />
             <EntityContextMenu
               UNSTABLE_extraContextMenuItems={UNSTABLE_extraContextMenuItems}
+              UNSTABLE_contextMenuOptions={UNSTABLE_contextMenuOptions}
               onUnregisterEntity={showRemovalDialog}
             />
           </>

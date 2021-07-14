@@ -18,8 +18,7 @@ import {
   createPlugin,
   createRoutableExtension,
   createRouteRef,
-} from '@backstage/core';
-import WelcomePageComponent from './components/WelcomePage';
+} from '@backstage/core-plugin-api';
 
 export const rootRouteRef = createRouteRef({
   title: 'Welcome',
@@ -27,8 +26,7 @@ export const rootRouteRef = createRouteRef({
 
 export const welcomePlugin = createPlugin({
   id: 'welcome',
-  register({ router, featureFlags }) {
-    router.addRoute(rootRouteRef, WelcomePageComponent);
+  register({ featureFlags }) {
     featureFlags.register('enable-welcome-box');
   },
 });

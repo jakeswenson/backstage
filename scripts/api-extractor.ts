@@ -21,7 +21,9 @@ import {
   resolve as resolvePath,
   relative as relativePath,
   dirname,
+  join,
 } from 'path';
+import prettier from 'prettier';
 import fs from 'fs-extra';
 import {
   Extractor,
@@ -60,6 +62,27 @@ PackageJsonLookup.prototype.tryGetPackageJsonFilePathFor = function tryGetPackag
   return old.call(this, path);
 };
 
+/**
+ * Another monkey patch where we apply prettier to the API reports. This has to be patched into
+ * the middle of the process as API Extractor does a comparison of the contents of the old
+ * and new files during generation. This inserts the formatting just before that comparison.
+ */
+const {
+  ApiReportGenerator,
+} = require('@microsoft/api-extractor/lib/generators/ApiReportGenerator');
+
+const originalGenerateReviewFileContent =
+  ApiReportGenerator.generateReviewFileContent;
+ApiReportGenerator.generateReviewFileContent = function decoratedGenerateReviewFileContent(
+  ...args
+) {
+  const content = originalGenerateReviewFileContent.apply(this, args);
+  return prettier.format(content, {
+    ...require('@spotify/prettier-config'),
+    parser: 'markdown',
+  });
+};
+
 const PACKAGE_ROOTS = ['packages', 'plugins'];
 
 const SKIPPED_PACKAGES = [
@@ -72,16 +95,6 @@ const SKIPPED_PACKAGES = [
   'packages/e2e-test',
   'packages/storybook',
   'packages/techdocs-cli',
-
-  // TODO(Rugvip): Enable these once `import * as ...` and `import()` PRs have landed, #1796 & #1916.
-  'packages/core',
-  'packages/core-api',
-  'packages/core-components',
-  'plugins/catalog',
-  'plugins/catalog-backend',
-  'plugins/catalog-react',
-  'plugins/github-deployments',
-  'plugins/sentry-backend',
 ];
 
 async function findPackageDirs() {
@@ -95,6 +108,13 @@ async function findPackageDirs() {
 
       const stat = await fs.stat(fullPackageDir);
       if (!stat.isDirectory()) {
+        continue;
+      }
+
+      try {
+        const packageJsonPath = join(fullPackageDir, 'package.json');
+        await fs.access(packageJsonPath);
+      } catch (_) {
         continue;
       }
 
