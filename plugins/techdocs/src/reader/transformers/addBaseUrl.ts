@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { EntityName } from '@backstage/catalog-model';
-import type { Transformer } from './transformer';
+import { CompoundEntityRef } from '@backstage/catalog-model';
 import { TechDocsStorageApi } from '../../api';
+import type { Transformer } from './transformer';
 
 type AddBaseUrlOptions = {
   techdocsStorageApi: TechDocsStorageApi;
-  entityId: EntityName;
+  entityId: CompoundEntityRef;
   path: string;
 };
 
@@ -33,7 +33,10 @@ const isSvgNeedingInlining = (
   attrVal: string,
   apiOrigin: string,
 ) => {
-  const isSrcToSvg = attrName === 'src' && attrVal.endsWith('.svg');
+  // Let's let the URL object do automatic parsing of the pathname for us
+  const pathname = new URL(attrVal, 'https://ignored.com').pathname;
+  const isSrcToSvg = attrName === 'src' && pathname.endsWith('.svg');
+
   const isRelativeUrl = !attrVal.match(/^([a-z]*:)?\/\//i);
   const pointsToOurBackend = attrVal.startsWith(apiOrigin);
   return isSrcToSvg && (isRelativeUrl || pointsToOurBackend);
@@ -44,14 +47,15 @@ export const addBaseUrl = ({
   entityId,
   path,
 }: AddBaseUrlOptions): Transformer => {
-  return dom => {
-    const updateDom = <T extends Element>(
+  return async dom => {
+    const apiOrigin = await techdocsStorageApi.getApiOrigin();
+
+    const updateDom = async <T extends Element>(
       list: HTMLCollectionOf<T> | NodeListOf<T>,
       attributeName: string,
-    ): void => {
-      Array.from(list)
-        .filter(elem => !!elem.getAttribute(attributeName))
-        .forEach(async (elem: T) => {
+    ) => {
+      for (const elem of list) {
+        if (elem.hasAttribute(attributeName)) {
           const elemAttribute = elem.getAttribute(attributeName);
           if (!elemAttribute) return;
 
@@ -61,14 +65,16 @@ export const addBaseUrl = ({
             entityId,
             path,
           );
-          const apiOrigin = await techdocsStorageApi.getApiOrigin();
+
           if (isSvgNeedingInlining(attributeName, elemAttribute, apiOrigin)) {
             try {
-              const svg = await fetch(newValue);
+              const svg = await fetch(newValue, { credentials: 'include' });
               const svgContent = await svg.text();
               elem.setAttribute(
                 attributeName,
-                `data:image/svg+xml;base64,${btoa(svgContent)}`,
+                `data:image/svg+xml;base64,${btoa(
+                  unescape(encodeURIComponent(svgContent)),
+                )}`,
               );
             } catch (e) {
               elem.setAttribute('alt', `Error: ${elemAttribute}`);
@@ -76,13 +82,17 @@ export const addBaseUrl = ({
           } else {
             elem.setAttribute(attributeName, newValue);
           }
-        });
+        }
+      }
     };
 
-    updateDom<HTMLImageElement>(dom.querySelectorAll('img'), 'src');
-    updateDom<HTMLScriptElement>(dom.querySelectorAll('script'), 'src');
-    updateDom<HTMLLinkElement>(dom.querySelectorAll('link'), 'href');
-    updateDom<HTMLAnchorElement>(dom.querySelectorAll('a[download]'), 'href');
+    await Promise.all([
+      updateDom<HTMLImageElement>(dom.querySelectorAll('img'), 'src'),
+      updateDom<HTMLScriptElement>(dom.querySelectorAll('script'), 'src'),
+      updateDom<HTMLSourceElement>(dom.querySelectorAll('source'), 'src'),
+      updateDom<HTMLLinkElement>(dom.querySelectorAll('link'), 'href'),
+      updateDom<HTMLAnchorElement>(dom.querySelectorAll('a[download]'), 'href'),
+    ]);
 
     return dom;
   };

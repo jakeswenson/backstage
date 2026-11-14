@@ -14,71 +14,42 @@
  * limitations under the License.
  */
 
-import { Entity } from '@backstage/catalog-model';
-import {
-  Box,
-  Checkbox,
-  FormControlLabel,
-  TextField,
-  Typography,
-} from '@material-ui/core';
-import CheckBoxIcon from '@material-ui/icons/CheckBox';
-import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import { Autocomplete } from '@material-ui/lab';
-import React, { useMemo } from 'react';
-import { useEntityListProvider } from '../../hooks/useEntityListProvider';
-import { EntityTagFilter } from '../../types';
+import { makeStyles } from '@material-ui/core/styles';
+import { EntityTagFilter } from '../../filters';
+import { EntityAutocompletePicker } from '../EntityAutocompletePicker/EntityAutocompletePicker';
+import { catalogReactTranslationRef } from '../../translation';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 
-const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
-const checkedIcon = <CheckBoxIcon fontSize="small" />;
+/** @public */
+export type CatalogReactEntityTagPickerClassKey = 'input';
 
-export const EntityTagPicker = () => {
-  const { updateFilters, backendEntities, filters } = useEntityListProvider();
-  const availableTags = useMemo(
-    () =>
-      [
-        ...new Set(
-          backendEntities
-            .flatMap((e: Entity) => e.metadata.tags)
-            .filter(Boolean) as string[],
-        ),
-      ].sort(),
-    [backendEntities],
-  );
+/** @public */
+export type EntityTagPickerProps = {
+  showCounts?: boolean;
+  initialFilter?: string[];
+  hidden?: boolean;
+};
 
-  if (!availableTags.length) return null;
+const useStyles = makeStyles(
+  { input: {} },
+  { name: 'CatalogReactEntityTagPicker' },
+);
 
-  const onChange = (tags: string[]) => {
-    updateFilters({
-      tags: tags.length ? new EntityTagFilter(tags) : undefined,
-    });
-  };
+/** @public */
+export const EntityTagPicker = (props: EntityTagPickerProps) => {
+  const classes = useStyles();
+  const { t } = useTranslationRef(catalogReactTranslationRef);
 
   return (
-    <Box pb={1} pt={1}>
-      <Typography variant="button">Tags</Typography>
-      <Autocomplete<string>
-        multiple
-        options={availableTags}
-        value={filters.tags?.values ?? []}
-        onChange={(_: object, value: string[]) => onChange(value)}
-        renderOption={(option, { selected }) => (
-          <FormControlLabel
-            control={
-              <Checkbox
-                icon={icon}
-                checkedIcon={checkedIcon}
-                checked={selected}
-              />
-            }
-            label={option}
-          />
-        )}
-        size="small"
-        popupIcon={<ExpandMoreIcon data-testid="tag-picker-expand" />}
-        renderInput={params => <TextField {...params} variant="outlined" />}
-      />
-    </Box>
+    <EntityAutocompletePicker
+      label={t('entityTagPicker.title')}
+      name="tags"
+      path="metadata.tags"
+      Filter={EntityTagFilter}
+      showCounts={props.showCounts}
+      InputProps={{ className: classes.input }}
+      initialSelectedOptions={props.initialFilter ? props.initialFilter : []}
+      hidden={props.hidden}
+    />
   );
 };

@@ -14,40 +14,63 @@
  * limitations under the License.
  */
 
-import React, { ComponentClass, Component, ErrorInfo } from 'react';
+import Typography from '@material-ui/core/Typography';
+import { PropsWithChildren, ComponentClass, Component, ErrorInfo } from 'react';
+import { LinkButton } from '../../components/LinkButton';
+import { ErrorPanel } from '../../components/ErrorPanel';
+import { coreComponentsTranslationRef } from '../../translation';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 
-type Props = {
-  slackChannel?: string;
-  onError?: (error: Error, errorInfo: string) => null;
+type SlackChannel = {
+  name: string;
+  href?: string;
 };
+
+/** @public */
+export type ErrorBoundaryProps = PropsWithChildren<{
+  slackChannel?: string | SlackChannel;
+  onError?: (error: Error, errorInfo: string) => null;
+}>;
 
 type State = {
   error?: Error;
   errorInfo?: ErrorInfo;
 };
 
-type EProps = {
-  error?: Error;
-  slackChannel?: string;
-  children?: React.ReactNode;
-};
+const SlackLink = (props: { slackChannel?: string | SlackChannel }) => {
+  const { slackChannel } = props;
+  const { t } = useTranslationRef(coreComponentsTranslationRef);
 
-const Error = ({ slackChannel }: EProps) => {
+  if (!slackChannel) {
+    return null;
+  } else if (typeof slackChannel === 'string') {
+    return (
+      <Typography>{t('errorBoundary.title', { slackChannel })}</Typography>
+    );
+  } else if (!slackChannel.href) {
+    return (
+      <Typography>
+        {t('errorBoundary.title', {
+          slackChannel: slackChannel.name,
+        })}
+      </Typography>
+    );
+  }
+
   return (
-    <div role="alert">
-      Something went wrong here.{' '}
-      {slackChannel && <>Please contact {slackChannel} for help.</>}
-    </div>
+    <LinkButton to={slackChannel.href} variant="contained">
+      {slackChannel.name}
+    </LinkButton>
   );
 };
 
+/** @public */
 export const ErrorBoundary: ComponentClass<
-  Props,
+  ErrorBoundaryProps,
   State
-> = class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
+> = class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
-
     this.state = {
       error: undefined,
       errorInfo: undefined,
@@ -56,18 +79,22 @@ export const ErrorBoundary: ComponentClass<
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // eslint-disable-next-line no-console
-    console.error(`ErrorBoundary, error: ${error}, info: ${errorInfo}`);
+    console.error(`ErrorBoundary, error: ${error}`, { error, errorInfo });
     this.setState({ error, errorInfo });
   }
 
   render() {
-    const { slackChannel } = this.props;
-    const { error, errorInfo } = this.state;
+    const { slackChannel, children } = this.props;
+    const { error } = this.state;
 
-    if (!errorInfo) {
-      return this.props.children;
+    if (!error) {
+      return children;
     }
 
-    return <Error error={error} slackChannel={slackChannel} />;
+    return (
+      <ErrorPanel title="Something Went Wrong" error={error}>
+        <SlackLink slackChannel={slackChannel} />
+      </ErrorPanel>
+    );
   }
 };

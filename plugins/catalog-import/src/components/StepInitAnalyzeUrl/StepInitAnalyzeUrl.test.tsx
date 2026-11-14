@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import { ApiProvider, ApiRegistry, errorApiRef } from '@backstage/core';
-import { act, render } from '@testing-library/react';
+import { errorApiRef } from '@backstage/core-plugin-api';
+import { renderInTestApp, TestApiProvider } from '@backstage/test-utils';
+import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import React from 'react';
-import { AnalyzeResult, catalogImportApiRef } from '../../api/';
+import { ReactNode } from 'react';
 import { StepInitAnalyzeUrl } from './StepInitAnalyzeUrl';
+import { AnalyzeResult, catalogImportApiRef } from '../../api/CatalogImportApi';
 
 describe('<StepInitAnalyzeUrl />', () => {
   const catalogImportApi: jest.Mocked<typeof catalogImportApiRef.T> = {
@@ -32,15 +33,15 @@ describe('<StepInitAnalyzeUrl />', () => {
     error$: jest.fn(),
   };
 
-  const Wrapper = ({ children }: { children?: React.ReactNode }) => (
-    <ApiProvider
-      apis={ApiRegistry.with(catalogImportApiRef, catalogImportApi).with(
-        errorApiRef,
-        errorApi,
-      )}
+  const Wrapper = ({ children }: { children?: ReactNode }) => (
+    <TestApiProvider
+      apis={[
+        [catalogImportApiRef, catalogImportApi],
+        [errorApiRef, errorApi],
+      ]}
     >
       {children}
-    </ApiProvider>
+    </TestApiProvider>
   );
 
   const location = {
@@ -59,30 +60,28 @@ describe('<StepInitAnalyzeUrl />', () => {
   });
 
   it('renders without exploding', async () => {
-    const { getByRole } = render(
-      <StepInitAnalyzeUrl onAnalysis={() => undefined} />,
-      {
-        wrapper: Wrapper,
-      },
+    await renderInTestApp(
+      <Wrapper>
+        <StepInitAnalyzeUrl onAnalysis={() => undefined} />
+      </Wrapper>,
     );
 
-    expect(getByRole('textbox', { name: /Repository/i })).toBeInTheDocument();
-    expect(getByRole('textbox', { name: /Repository/i })).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: /URL/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /URL/i })).toHaveValue('');
   });
 
   it('should use default analysis url', async () => {
-    const { getByRole } = render(
-      <StepInitAnalyzeUrl
-        onAnalysis={() => undefined}
-        analysisUrl="https://default"
-      />,
-      {
-        wrapper: Wrapper,
-      },
+    await renderInTestApp(
+      <Wrapper>
+        <StepInitAnalyzeUrl
+          onAnalysis={() => undefined}
+          analysisUrl="https://default"
+        />
+      </Wrapper>,
     );
 
-    expect(getByRole('textbox', { name: /Repository/i })).toBeInTheDocument();
-    expect(getByRole('textbox', { name: /Repository/i })).toHaveValue(
+    expect(screen.getByRole('textbox', { name: /URL/i })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /URL/i })).toHaveValue(
       'https://default',
     );
   });
@@ -90,49 +89,47 @@ describe('<StepInitAnalyzeUrl />', () => {
   it('should not analyze without url', async () => {
     const onAnalysisFn = jest.fn();
 
-    const { getByRole } = render(
-      <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />,
-      {
-        wrapper: Wrapper,
-      },
+    await renderInTestApp(
+      <Wrapper>
+        <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />
+      </Wrapper>,
     );
 
     await act(async () => {
       try {
-        userEvent.click(getByRole('button', { name: /Analyze/i }));
+        await userEvent.click(screen.getByRole('button', { name: /Analyze/i }));
       } catch {
         return;
       }
     });
 
-    expect(catalogImportApi.analyzeUrl).toBeCalledTimes(0);
-    expect(onAnalysisFn).toBeCalledTimes(0);
-    expect(errorApi.post).toBeCalledTimes(0);
+    expect(catalogImportApi.analyzeUrl).toHaveBeenCalledTimes(0);
+    expect(onAnalysisFn).toHaveBeenCalledTimes(0);
+    expect(errorApi.post).toHaveBeenCalledTimes(0);
   });
 
   it('should not analyze invalid value', async () => {
     const onAnalysisFn = jest.fn();
 
-    const { getByRole, getByText } = render(
-      <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />,
-      {
-        wrapper: Wrapper,
-      },
+    await renderInTestApp(
+      <Wrapper>
+        <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />
+      </Wrapper>,
     );
 
     await act(async () => {
       await userEvent.type(
-        getByRole('textbox', { name: /Repository/i }),
+        screen.getByRole('textbox', { name: /URL/i }),
         'http:/',
       );
-      userEvent.click(getByRole('button', { name: /Analyze/i }));
+      await userEvent.click(screen.getByRole('button', { name: /Analyze/i }));
     });
 
-    expect(catalogImportApi.analyzeUrl).toBeCalledTimes(0);
-    expect(onAnalysisFn).toBeCalledTimes(0);
-    expect(errorApi.post).toBeCalledTimes(0);
+    expect(catalogImportApi.analyzeUrl).toHaveBeenCalledTimes(0);
+    expect(onAnalysisFn).toHaveBeenCalledTimes(0);
+    expect(errorApi.post).toHaveBeenCalledTimes(0);
     expect(
-      getByText('Must start with http:// or https://.'),
+      screen.getByText('Must start with http:// or https://.'),
     ).toBeInTheDocument();
   });
 
@@ -144,11 +141,10 @@ describe('<StepInitAnalyzeUrl />', () => {
       locations: [location],
     } as AnalyzeResult;
 
-    const { getByRole } = render(
-      <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />,
-      {
-        wrapper: Wrapper,
-      },
+    await renderInTestApp(
+      <Wrapper>
+        <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />
+      </Wrapper>,
     );
 
     catalogImportApi.analyzeUrl.mockReturnValueOnce(
@@ -157,20 +153,20 @@ describe('<StepInitAnalyzeUrl />', () => {
 
     await act(async () => {
       await userEvent.type(
-        getByRole('textbox', { name: /Repository/i }),
+        screen.getByRole('textbox', { name: /URL/i }),
         'https://my-repository',
       );
-      userEvent.click(getByRole('button', { name: /Analyze/i }));
+      await userEvent.click(screen.getByRole('button', { name: /Analyze/i }));
     });
 
-    expect(onAnalysisFn).toBeCalledTimes(1);
+    expect(onAnalysisFn).toHaveBeenCalledTimes(1);
     expect(onAnalysisFn.mock.calls[0]).toMatchObject([
       'single-location',
       'https://my-repository',
       analyzeResult,
       { prepareResult: analyzeResult },
     ]);
-    expect(errorApi.post).toBeCalledTimes(0);
+    expect(errorApi.post).toHaveBeenCalledTimes(0);
   });
 
   it('should analyze multiple locations', async () => {
@@ -181,11 +177,10 @@ describe('<StepInitAnalyzeUrl />', () => {
       locations: [location, location],
     } as AnalyzeResult;
 
-    const { getByRole } = render(
-      <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />,
-      {
-        wrapper: Wrapper,
-      },
+    await renderInTestApp(
+      <Wrapper>
+        <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />
+      </Wrapper>,
     );
 
     catalogImportApi.analyzeUrl.mockReturnValueOnce(
@@ -194,19 +189,19 @@ describe('<StepInitAnalyzeUrl />', () => {
 
     await act(async () => {
       await userEvent.type(
-        getByRole('textbox', { name: /Repository/i }),
+        screen.getByRole('textbox', { name: /URL/i }),
         'https://my-repository-1',
       );
-      userEvent.click(getByRole('button', { name: /Analyze/i }));
+      await userEvent.click(screen.getByRole('button', { name: /Analyze/i }));
     });
 
-    expect(onAnalysisFn).toBeCalledTimes(1);
+    expect(onAnalysisFn).toHaveBeenCalledTimes(1);
     expect(onAnalysisFn.mock.calls[0]).toMatchObject([
       'multiple-locations',
       'https://my-repository-1',
       analyzeResult,
     ]);
-    expect(errorApi.post).toBeCalledTimes(0);
+    expect(errorApi.post).toHaveBeenCalledTimes(0);
   });
 
   it('should not analyze with no locations', async () => {
@@ -217,11 +212,10 @@ describe('<StepInitAnalyzeUrl />', () => {
       locations: [],
     } as AnalyzeResult;
 
-    const { getByRole, getByText } = render(
-      <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />,
-      {
-        wrapper: Wrapper,
-      },
+    await renderInTestApp(
+      <Wrapper>
+        <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />
+      </Wrapper>,
     );
 
     catalogImportApi.analyzeUrl.mockReturnValueOnce(
@@ -230,17 +224,17 @@ describe('<StepInitAnalyzeUrl />', () => {
 
     await act(async () => {
       await userEvent.type(
-        getByRole('textbox', { name: /Repository/i }),
+        screen.getByRole('textbox', { name: /URL/i }),
         'https://my-repository-1',
       );
-      userEvent.click(getByRole('button', { name: /Analyze/i }));
+      await userEvent.click(screen.getByRole('button', { name: /Analyze/i }));
     });
 
-    expect(onAnalysisFn).toBeCalledTimes(0);
+    expect(onAnalysisFn).toHaveBeenCalledTimes(0);
     expect(
-      getByText('There are no entities at this location'),
+      screen.getByText('There are no entities at this location'),
     ).toBeInTheDocument();
-    expect(errorApi.post).toBeCalledTimes(0);
+    expect(errorApi.post).toHaveBeenCalledTimes(0);
   });
 
   it('should analyze repository', async () => {
@@ -261,11 +255,10 @@ describe('<StepInitAnalyzeUrl />', () => {
       ],
     } as AnalyzeResult;
 
-    const { getByRole } = render(
-      <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />,
-      {
-        wrapper: Wrapper,
-      },
+    await renderInTestApp(
+      <Wrapper>
+        <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />
+      </Wrapper>,
     );
 
     catalogImportApi.analyzeUrl.mockReturnValueOnce(
@@ -274,19 +267,19 @@ describe('<StepInitAnalyzeUrl />', () => {
 
     await act(async () => {
       await userEvent.type(
-        getByRole('textbox', { name: /Repository/i }),
+        screen.getByRole('textbox', { name: /URL/i }),
         'https://my-repository-2',
       );
-      userEvent.click(getByRole('button', { name: /Analyze/i }));
+      await userEvent.click(screen.getByRole('button', { name: /Analyze/i }));
     });
 
-    expect(onAnalysisFn).toBeCalledTimes(1);
+    expect(onAnalysisFn).toHaveBeenCalledTimes(1);
     expect(onAnalysisFn.mock.calls[0]).toMatchObject([
       'no-location',
       'https://my-repository-2',
       analyzeResult,
     ]);
-    expect(errorApi.post).toBeCalledTimes(0);
+    expect(errorApi.post).toHaveBeenCalledTimes(0);
   });
 
   it('should not analyze repository without entities', async () => {
@@ -299,11 +292,10 @@ describe('<StepInitAnalyzeUrl />', () => {
       generatedEntities: [],
     } as AnalyzeResult;
 
-    const { getByRole, getByText } = render(
-      <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />,
-      {
-        wrapper: Wrapper,
-      },
+    await renderInTestApp(
+      <Wrapper>
+        <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />
+      </Wrapper>,
     );
 
     catalogImportApi.analyzeUrl.mockReturnValueOnce(
@@ -312,17 +304,17 @@ describe('<StepInitAnalyzeUrl />', () => {
 
     await act(async () => {
       await userEvent.type(
-        getByRole('textbox', { name: /Repository/i }),
+        screen.getByRole('textbox', { name: /URL/i }),
         'https://my-repository-2',
       );
-      userEvent.click(getByRole('button', { name: /Analyze/i }));
+      await userEvent.click(screen.getByRole('button', { name: /Analyze/i }));
     });
 
-    expect(onAnalysisFn).toBeCalledTimes(0);
+    expect(onAnalysisFn).toHaveBeenCalledTimes(0);
     expect(
-      getByText("Couldn't generate entities for your repository"),
+      screen.getByText("Couldn't generate entities for your repository"),
     ).toBeInTheDocument();
-    expect(errorApi.post).toBeCalledTimes(0);
+    expect(errorApi.post).toHaveBeenCalledTimes(0);
   });
 
   it('should not analyze repository if disabled', async () => {
@@ -343,11 +335,10 @@ describe('<StepInitAnalyzeUrl />', () => {
       ],
     } as AnalyzeResult;
 
-    const { getByRole, getByText } = render(
-      <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} disablePullRequest />,
-      {
-        wrapper: Wrapper,
-      },
+    await renderInTestApp(
+      <Wrapper>
+        <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} disablePullRequest />
+      </Wrapper>,
     );
 
     catalogImportApi.analyzeUrl.mockReturnValueOnce(
@@ -356,48 +347,47 @@ describe('<StepInitAnalyzeUrl />', () => {
 
     await act(async () => {
       await userEvent.type(
-        getByRole('textbox', { name: /Repository/i }),
+        screen.getByRole('textbox', { name: /URL/i }),
         'https://my-repository-2',
       );
-      userEvent.click(getByRole('button', { name: /Analyze/i }));
+      await userEvent.click(screen.getByRole('button', { name: /Analyze/i }));
     });
 
-    expect(onAnalysisFn).toBeCalledTimes(0);
+    expect(onAnalysisFn).toHaveBeenCalledTimes(0);
     expect(
-      getByText("Couldn't generate entities for your repository"),
+      screen.getByText("Couldn't generate entities for your repository"),
     ).toBeInTheDocument();
-    expect(errorApi.post).toBeCalledTimes(0);
+    expect(errorApi.post).toHaveBeenCalledTimes(0);
   });
 
   it('should report unknown type to the errorapi', async () => {
     const onAnalysisFn = jest.fn();
 
-    const { getByRole, getByText } = render(
-      <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />,
-      {
-        wrapper: Wrapper,
-      },
+    await renderInTestApp(
+      <Wrapper>
+        <StepInitAnalyzeUrl onAnalysis={onAnalysisFn} />
+      </Wrapper>,
     );
 
     catalogImportApi.analyzeUrl.mockReturnValueOnce(
-      Promise.resolve(({ type: 'unknown' } as any) as AnalyzeResult),
+      Promise.resolve({ type: 'unknown' } as any as AnalyzeResult),
     );
 
     await act(async () => {
       await userEvent.type(
-        getByRole('textbox', { name: /Repository/i }),
+        screen.getByRole('textbox', { name: /URL/i }),
         'https://my-repository-2',
       );
-      userEvent.click(getByRole('button', { name: /Analyze/i }));
+      await userEvent.click(screen.getByRole('button', { name: /Analyze/i }));
     });
 
-    expect(onAnalysisFn).toBeCalledTimes(0);
+    expect(onAnalysisFn).toHaveBeenCalledTimes(0);
     expect(
-      getByText(
+      screen.getByText(
         'Received unknown analysis result of type unknown. Please contact the support team.',
       ),
     ).toBeInTheDocument();
-    expect(errorApi.post).toBeCalledTimes(1);
+    expect(errorApi.post).toHaveBeenCalledTimes(1);
     expect(errorApi.post.mock.calls[0][0]).toMatchObject(
       new Error(
         'Received unknown analysis result of type unknown. Please contact the support team.',

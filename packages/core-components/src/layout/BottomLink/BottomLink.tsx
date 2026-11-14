@@ -14,57 +14,74 @@
  * limitations under the License.
  */
 
-import React from 'react';
-import {
-  ListItem,
-  ListItemIcon,
-  Divider,
-  ListItemText,
-  makeStyles,
-} from '@material-ui/core';
-import ArrowIcon from '@material-ui/icons/ArrowForward';
-import { BackstageTheme } from '@backstage/theme';
 import Box from '@material-ui/core/Box';
+import Divider from '@material-ui/core/Divider';
+import { makeStyles } from '@material-ui/core/styles';
+import Typography from '@material-ui/core/Typography';
+import ArrowIcon from '@material-ui/icons/ArrowForward';
+import { MouseEvent } from 'react';
 import { Link } from '../../components/Link';
 
-const useStyles = makeStyles<BackstageTheme>(theme => ({
-  root: {
-    maxWidth: 'fit-content',
-    padding: theme.spacing(2, 2, 2, 2.5),
-  },
-  boxTitle: {
-    margin: 0,
-    color: theme.palette.textSubtle,
-  },
-  arrow: {
-    color: theme.palette.textSubtle,
-  },
-}));
+/**
+ * @public
+ * @deprecated Use the replacement described in {@link BottomLink} instead.
+ * BUI components use their own props and styling contracts.
+ */
+export type BottomLinkClassKey = 'root' | 'boxTitle' | 'arrow';
 
+const useStyles = makeStyles(
+  theme => ({
+    root: {
+      maxWidth: 'fit-content',
+      padding: theme.spacing(2, 2, 2, 2.5),
+    },
+    boxTitle: {
+      margin: 0,
+      color: theme.palette.textSubtle,
+    },
+    arrow: {
+      color: theme.palette.textSubtle,
+    },
+  }),
+  { name: 'BackstageBottomLink' },
+);
+
+/**
+ * @public
+ * @deprecated Use the replacement described in {@link BottomLink} instead.
+ * BUI components use their own props and styling contracts.
+ */
 export type BottomLinkProps = {
   link: string;
   title: string;
-  onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
 };
 
-export const BottomLink = ({ link, title, onClick }: BottomLinkProps) => {
+/**
+ * Footer with link used in  {@link InfoCard } and {@link TabbedCard}
+ *
+ * @public
+ *
+ * @deprecated Compose `CardFooter` and `Link` from `@backstage/ui` instead.
+ * Pass the destination as `href` and add any desired arrow icon and layout.
+ */
+export function BottomLink(props: BottomLinkProps) {
+  const { link, title, onClick } = props;
   const classes = useStyles();
 
   return (
-    <div>
+    <Box>
       <Divider />
       <Link to={link} onClick={onClick} underline="none">
-        <ListItem className={classes.root}>
-          <ListItemText>
-            <Box className={classes.boxTitle} fontWeight="fontWeightBold" m={1}>
-              {title}
-            </Box>
-          </ListItemText>
-          <ListItemIcon>
-            <ArrowIcon className={classes.arrow} />
-          </ListItemIcon>
-        </ListItem>
+        <Box display="flex" alignItems="center" className={classes.root}>
+          <Box className={classes.boxTitle} fontWeight="fontWeightBold" m={1}>
+            <Typography>
+              <strong>{title}</strong>
+            </Typography>
+          </Box>
+          <ArrowIcon className={classes.arrow} />
+        </Box>
       </Link>
-    </div>
+    </Box>
   );
-};
+}

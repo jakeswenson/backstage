@@ -15,16 +15,18 @@
  */
 
 import {
-  storageApiRef,
-  errorApiRef,
   createApiFactory,
-  AlertApiForwarder,
-  alertApiRef,
-} from '@backstage/core-api';
-import { MockErrorApi, MockStorageApi } from './apis';
+  errorApiRef,
+  fetchApiRef,
+  storageApiRef,
+} from '@backstage/core-plugin-api';
+import { translationApiRef } from '@backstage/core-plugin-api/alpha';
+import { MockErrorApi, MockFetchApi, MockStorageApi } from './apis';
+import { MockTranslationApi } from './apis/TranslationApi';
 
 export const mockApis = [
   createApiFactory(errorApiRef, new MockErrorApi()),
+  createApiFactory(fetchApiRef, new MockFetchApi()),
   createApiFactory(storageApiRef, MockStorageApi.create()),
-  createApiFactory(alertApiRef, new AlertApiForwarder()),
+  createApiFactory(translationApiRef, MockTranslationApi.create()),
 ];

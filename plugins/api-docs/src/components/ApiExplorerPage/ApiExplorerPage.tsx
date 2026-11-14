@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Backstage Authors
+ * Copyright 2021 The Backstage Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,81 +14,18 @@
  * limitations under the License.
  */
 
+import { useOutlet } from 'react-router-dom';
 import {
-  Content,
-  ContentHeader,
-  SupportButton,
-  TableColumn,
-  useRouteRef,
-} from '@backstage/core';
-import {
-  EntityKindPicker,
-  EntityLifecyclePicker,
-  EntityListProvider,
-  EntityOwnerPicker,
-  EntityTagPicker,
-  EntityTypePicker,
-  UserListFilterKind,
-  UserListPicker,
-} from '@backstage/plugin-catalog-react';
-import { CatalogTable, CatalogTableRow } from '@backstage/plugin-catalog';
-import { Button, makeStyles } from '@material-ui/core';
-import React from 'react';
-import { Link as RouterLink } from 'react-router-dom';
-import { createComponentRouteRef } from '../../routes';
-import { ApiExplorerLayout } from './ApiExplorerLayout';
+  DefaultApiExplorerPage,
+  DefaultApiExplorerPageProps,
+} from './DefaultApiExplorerPage';
 
-const useStyles = makeStyles(theme => ({
-  contentWrapper: {
-    display: 'grid',
-    gridTemplateAreas: "'filters' 'table'",
-    gridTemplateColumns: '250px 1fr',
-    gridColumnGap: theme.spacing(2),
-  },
-}));
+/**
+ * ApiExplorerPage
+ * @public
+ */
+export const ApiExplorerPage = (props: DefaultApiExplorerPageProps) => {
+  const outlet = useOutlet();
 
-export type ApiExplorerPageProps = {
-  initiallySelectedFilter?: UserListFilterKind;
-  columns?: TableColumn<CatalogTableRow>[];
-};
-
-export const ApiExplorerPage = ({
-  initiallySelectedFilter = 'all',
-  columns,
-}: ApiExplorerPageProps) => {
-  const styles = useStyles();
-  const createComponentLink = useRouteRef(createComponentRouteRef);
-
-  return (
-    <ApiExplorerLayout>
-      <Content>
-        <ContentHeader title="">
-          {createComponentLink && (
-            <Button
-              variant="contained"
-              color="primary"
-              component={RouterLink}
-              to={createComponentLink()}
-            >
-              Register Existing API
-            </Button>
-          )}
-          <SupportButton>All your APIs</SupportButton>
-        </ContentHeader>
-        <div className={styles.contentWrapper}>
-          <EntityListProvider>
-            <div>
-              <EntityKindPicker initialFilter="api" hidden />
-              <UserListPicker initialFilter={initiallySelectedFilter} />
-              <EntityTypePicker />
-              <EntityOwnerPicker />
-              <EntityLifecyclePicker />
-              <EntityTagPicker />
-            </div>
-            <CatalogTable columns={columns} />
-          </EntityListProvider>
-        </div>
-      </Content>
-    </ApiExplorerLayout>
-  );
+  return outlet || <DefaultApiExplorerPage {...props} />;
 };

@@ -14,60 +14,89 @@
  * limitations under the License.
  */
 
-import React, {
-  useState,
+import Card from '@material-ui/core/Card';
+import CardContent from '@material-ui/core/CardContent';
+import CardHeader from '@material-ui/core/CardHeader';
+import Divider from '@material-ui/core/Divider';
+import { makeStyles, withStyles } from '@material-ui/core/styles';
+import Tab, { TabProps } from '@material-ui/core/Tab';
+import Tabs from '@material-ui/core/Tabs';
+import {
+  ChangeEvent,
+  Children,
+  isValidElement,
+  PropsWithChildren,
   ReactElement,
   ReactNode,
-  PropsWithChildren,
+  useState,
 } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  Divider,
-  withStyles,
-  makeStyles,
-  Tabs,
-  Tab,
-  TabProps,
-} from '@material-ui/core';
 import { BottomLink, BottomLinkProps } from '../BottomLink';
-import { ErrorBoundary } from '../ErrorBoundary';
+import { ErrorBoundary, ErrorBoundaryProps } from '../ErrorBoundary';
 
-const useTabsStyles = makeStyles(theme => ({
-  root: {
-    padding: theme.spacing(0, 2, 0, 2.5),
-    minHeight: theme.spacing(3),
-  },
-  indicator: {
-    backgroundColor: theme.palette.info.main,
-    height: theme.spacing(0.3),
-  },
-}));
+/**
+ * @deprecated Use the replacement described in {@link TabbedCard} instead.
+ * BUI components use their own props and styling contracts.
+ */
+export type TabbedCardClassKey = 'root' | 'indicator';
 
-const BoldHeader = withStyles(theme => ({
-  root: { padding: theme.spacing(2, 2, 2, 2.5), display: 'inline-block' },
-  title: { fontWeight: 700 },
-  subheader: { paddingTop: theme.spacing(1) },
-}))(CardHeader);
+const useTabsStyles = makeStyles(
+  theme => ({
+    root: {
+      padding: theme.spacing(0, 2, 0, 2.5),
+      minHeight: theme.spacing(3),
+    },
+    indicator: {
+      backgroundColor: theme.palette.info.main,
+      height: theme.spacing(0.3),
+    },
+  }),
+  { name: 'BackstageTabbedCard' },
+);
+
+/**
+ * @public
+ * @deprecated Use the replacement described in {@link TabbedCard} instead.
+ * BUI components use their own props and styling contracts.
+ */
+export type BoldHeaderClassKey = 'root' | 'title' | 'subheader';
+
+const BoldHeader = withStyles(
+  theme => ({
+    root: { padding: theme.spacing(2, 2, 2, 2.5), display: 'inline-block' },
+    title: { fontWeight: 700 },
+    subheader: { paddingTop: theme.spacing(1) },
+  }),
+  { name: 'BackstageTabbedCardBoldHeader' },
+)(CardHeader);
 
 type Props = {
+  /** @deprecated Use errorBoundaryProps instead */
   slackChannel?: string;
+  errorBoundaryProps?: ErrorBoundaryProps;
   children?: ReactElement<TabProps>[];
-  onChange?: (event: React.ChangeEvent<{}>, value: number | string) => void;
+  onChange?: (event: ChangeEvent<{}>, value: number | string) => void;
   title?: string;
   value?: number | string;
   deepLink?: BottomLinkProps;
 };
 
-const TabbedCard = ({
-  slackChannel = '#backstage',
-  children,
-  title,
-  deepLink,
-  value,
-  onChange,
-}: PropsWithChildren<Props>) => {
+/**
+ * @deprecated Compose `Card`, `CardHeader`, `CardBody`, `Tabs`, `TabList`,
+ * `Tab`, and `TabPanel` from `@backstage/ui` instead. Adapt selection to
+ * tab keys and `onSelectionChange`, and use `CardFooter` with a link for
+ * `deepLink`. Keep an error boundary around the content if you rely on this
+ * component's error handling; BUI Card and Tabs do not provide it.
+ */
+export function TabbedCard(props: PropsWithChildren<Props>) {
+  const {
+    slackChannel,
+    errorBoundaryProps,
+    children,
+    title,
+    deepLink,
+    value,
+    onChange,
+  } = props;
   const tabsClasses = useTabsStyles();
   const [selectedIndex, selectIndex] = useState(0);
 
@@ -77,19 +106,28 @@ const TabbedCard = ({
 
   let selectedTabContent: ReactNode;
   if (!value) {
-    React.Children.map(children, (child, index) => {
-      if (index === selectedIndex) selectedTabContent = child?.props.children;
+    Children.map(children, (child, index) => {
+      if (isValidElement(child) && index === selectedIndex) {
+        selectedTabContent = child?.props.children;
+      }
     });
   } else {
-    React.Children.map(children, child => {
-      if (child?.props.value === value)
+    Children.map(children, child => {
+      if (
+        isValidElement<{ children?: ReactNode; value?: unknown }>(child) &&
+        child?.props.value === value
+      ) {
         selectedTabContent = child?.props.children;
+      }
     });
   }
 
+  const errProps: ErrorBoundaryProps =
+    errorBoundaryProps || (slackChannel ? { slackChannel } : {});
+
   return (
     <Card>
-      <ErrorBoundary slackChannel={slackChannel}>
+      <ErrorBoundary {...errProps}>
         {title && <BoldHeader title={title} />}
         <Tabs
           classes={tabsClasses}
@@ -104,29 +142,52 @@ const TabbedCard = ({
       </ErrorBoundary>
     </Card>
   );
-};
+}
 
-const useCardTabStyles = makeStyles(theme => ({
-  root: {
-    minWidth: theme.spacing(6),
-    minHeight: theme.spacing(3),
-    margin: theme.spacing(0, 2, 0, 0),
-    padding: theme.spacing(0.5, 0, 0.5, 0),
-    textTransform: 'none',
-  },
-  selected: {
-    fontWeight: 'bold',
-  },
-}));
+/**
+ * @public
+ * @deprecated Use the replacement described in {@link CardTab} instead.
+ * BUI components use their own props and styling contracts.
+ */
+export type CardTabClassKey = 'root' | 'selected';
+
+const useCardTabStyles = makeStyles(
+  theme => ({
+    root: {
+      minWidth: theme.spacing(6),
+      minHeight: theme.spacing(3),
+      margin: theme.spacing(0, 2, 0, 0),
+      padding: theme.spacing(0.5, 0, 0.5, 0),
+      textTransform: 'none',
+      '&:hover': {
+        opacity: 1,
+        backgroundColor: 'transparent',
+        color: theme.palette.text.primary,
+      },
+    },
+    selected: {
+      fontWeight: theme.typography.fontWeightBold,
+    },
+  }),
+  { name: 'BackstageCardTab' },
+);
 
 type CardTabProps = TabProps & {
   children: ReactNode;
 };
 
-const CardTab = ({ children, ...props }: PropsWithChildren<CardTabProps>) => {
+/**
+ * Card tab component used in {@link TabbedCard}
+ *
+ * @public
+ *
+ * @deprecated Use `Tab` and `TabPanel` from `@backstage/ui` within a BUI
+ * `Tabs` and `TabList` composition. Give matching tabs and panels the same
+ * `id` and move tab content into `TabPanel`.
+ */
+export function CardTab(props: PropsWithChildren<CardTabProps>) {
+  const { children, ...restProps } = props;
   const classes = useCardTabStyles();
 
-  return <Tab disableRipple classes={classes} {...props} />;
-};
-
-export { TabbedCard, CardTab };
+  return <Tab disableRipple classes={classes} {...restProps} />;
+}

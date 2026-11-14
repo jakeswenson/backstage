@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { SHADOW_DOM_STYLE_LOAD_EVENT } from '@backstage/plugin-techdocs-react';
 import type { Transformer } from '../reader/transformers';
 import { transform as transformer } from '../reader/transformers';
 
@@ -22,13 +23,13 @@ export type CreateTestShadowDomOptions = {
   postTransformers: Transformer[];
 };
 
-export const createTestShadowDom = (
+export const createTestShadowDom = async (
   fixture: string,
   opts: CreateTestShadowDomOptions = {
     preTransformers: [],
     postTransformers: [],
   },
-): ShadowRoot => {
+): Promise<ShadowRoot> => {
   const divElement = document.createElement('div');
   divElement.attachShadow({ mode: 'open' });
   document.body.appendChild(divElement);
@@ -39,7 +40,7 @@ export const createTestShadowDom = (
     'text/html',
   ).documentElement;
   if (opts.preTransformers) {
-    dom = transformer(dom, opts.preTransformers);
+    dom = await transformer(dom, opts.preTransformers);
   }
 
   // Mount the UI
@@ -47,8 +48,11 @@ export const createTestShadowDom = (
 
   // Transformers after the UI is rendered
   if (opts.postTransformers) {
-    transformer(dom, opts.postTransformers);
+    await transformer(dom, opts.postTransformers);
   }
+
+  // Simulate event dispatched after all styles are loaded
+  dom.dispatchEvent(new CustomEvent(SHADOW_DOM_STYLE_LOAD_EVENT));
 
   return divElement.shadowRoot!;
 };

@@ -15,9 +15,9 @@
  */
 
 import { waitFor } from '@testing-library/react';
-import { createTestShadowDom } from '../../test-utils';
-import { addBaseUrl } from '../transformers';
 import { TechDocsStorageApi } from '../../api';
+import { createTestShadowDom } from '../../test-utils';
+import { addBaseUrl } from './addBaseUrl';
 
 const DOC_STORAGE_URL = 'https://example-host.storage.googleapis.com';
 const API_ORIGIN_URL = 'https://backstage.example.com/api/techdocs';
@@ -42,6 +42,10 @@ const fixture = `
       <img src="test.jpg" />
       <script type="javascript" src="script.js"></script>
       <a href="afile.pdf" download>Download Now</a>
+      <video width="800" height="450" controls preload="auto">
+        <source src="avideo.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
     </body>
   </html>
 `;
@@ -62,8 +66,8 @@ describe('addBaseUrl', () => {
     global.fetch = originalFetch;
   });
 
-  it('contains relative paths', () => {
-    createTestShadowDom(fixture, {
+  it('contains relative paths', async () => {
+    await createTestShadowDom(fixture, {
       preTransformers: [
         addBaseUrl({
           techdocsStorageApi,
@@ -88,12 +92,18 @@ describe('addBaseUrl', () => {
     );
     expect(techdocsStorageApi.getBaseUrl).toHaveBeenNthCalledWith(
       3,
-      'astyle.css',
+      'avideo.mp4',
       mockEntityId,
       '',
     );
     expect(techdocsStorageApi.getBaseUrl).toHaveBeenNthCalledWith(
       4,
+      'astyle.css',
+      mockEntityId,
+      '',
+    );
+    expect(techdocsStorageApi.getBaseUrl).toHaveBeenNthCalledWith(
+      5,
       'afile.pdf',
       mockEntityId,
       '',
@@ -110,7 +120,7 @@ describe('addBaseUrl', () => {
       text: jest.fn().mockResolvedValue(svgContent),
     });
 
-    const root = createTestShadowDom('<img id="x" src="test.svg" />', {
+    const root = await createTestShadowDom('<img id="x" src="test.svg" />', {
       preTransformers: [
         addBaseUrl({
           techdocsStorageApi,
@@ -127,7 +137,7 @@ describe('addBaseUrl', () => {
     });
   });
 
-  it('inlines absolute url svgs pointed at our backend', async () => {
+  it('preserves anchors in the original src', async () => {
     const svgContent = '<svg></svg>';
     const expectedSrc = `data:image/svg+xml;base64,${Buffer.from(
       svgContent,
@@ -137,8 +147,8 @@ describe('addBaseUrl', () => {
       text: jest.fn().mockResolvedValue(svgContent),
     });
 
-    const root = createTestShadowDom(
-      `<img id="x" src="${API_ORIGIN_URL}/test.svg" />`,
+    const root = await createTestShadowDom(
+      '<img id="x" src="test.svg#dark-mode" />',
       {
         preTransformers: [
           addBaseUrl({
@@ -157,18 +167,54 @@ describe('addBaseUrl', () => {
     });
   });
 
+  it('inlines absolute url svgs pointed at our backend', async () => {
+    const svgContent = '<svg></svg>';
+    const expectedSrc = `data:image/svg+xml;base64,${Buffer.from(
+      svgContent,
+    ).toString('base64')}`;
+
+    (global.fetch as jest.Mock).mockReturnValue({
+      text: jest.fn().mockResolvedValue(svgContent),
+    });
+
+    const root = await createTestShadowDom(
+      `<img id="x" src="${API_ORIGIN_URL}/test.svg" />`,
+      {
+        preTransformers: [
+          addBaseUrl({
+            techdocsStorageApi,
+            entityId: mockEntityId,
+            path: '',
+          }),
+        ],
+        postTransformers: [],
+      },
+    );
+
+    await waitFor(() => {
+      const actualSrc = root.getElementById('x')?.getAttribute('src');
+      expect(expectedSrc).toEqual(actualSrc);
+      expect(global.fetch).toHaveBeenCalledWith(`${API_ORIGIN_URL}/test.svg`, {
+        credentials: 'include',
+      });
+    });
+  });
+
   it('does not inline external svgs', async () => {
     const expectedSrc = 'https://example.com/test.svg';
-    const root = createTestShadowDom(`<img id="x" src="${expectedSrc}" />`, {
-      preTransformers: [
-        addBaseUrl({
-          techdocsStorageApi,
-          entityId: mockEntityId,
-          path: '',
-        }),
-      ],
-      postTransformers: [],
-    });
+    const root = await createTestShadowDom(
+      `<img id="x" src="${expectedSrc}" />`,
+      {
+        preTransformers: [
+          addBaseUrl({
+            techdocsStorageApi,
+            entityId: mockEntityId,
+            path: '',
+          }),
+        ],
+        postTransformers: [],
+      },
+    );
 
     await new Promise<void>(done => {
       process.nextTick(() => {

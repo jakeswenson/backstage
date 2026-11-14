@@ -14,41 +14,66 @@
  * limitations under the License.
  */
 
-import React from 'react';
-import { capitalize } from 'lodash';
-import { Box } from '@material-ui/core';
-import { alertApiRef, Select, useApi } from '@backstage/core';
+import { useEffect } from 'react';
+import Box from '@material-ui/core/Box';
 import { useEntityTypeFilter } from '../../hooks/useEntityTypeFilter';
 
-export const EntityTypePicker = () => {
+import { alertApiRef, useApi } from '@backstage/core-plugin-api';
+import { Select } from '@backstage/core-components';
+import { catalogReactTranslationRef } from '../../translation';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
+
+/**
+ * Props for {@link EntityTypePicker}.
+ *
+ * @public
+ */
+export interface EntityTypePickerProps {
+  initialFilter?: string;
+  hidden?: boolean;
+}
+
+/** @public */
+export const EntityTypePicker = (props: EntityTypePickerProps) => {
+  const { hidden, initialFilter } = props;
   const alertApi = useApi(alertApiRef);
-  const { error, types, selectedType, setType } = useEntityTypeFilter();
+  const { error, availableTypes, selectedTypes, setSelectedTypes } =
+    useEntityTypeFilter();
+  const { t } = useTranslationRef(catalogReactTranslationRef);
 
-  if (!types) return null;
+  useEffect(() => {
+    if (error) {
+      alertApi.post({
+        message: t('entityTypePicker.errorMessage'),
+        severity: 'error',
+      });
+    }
+    if (initialFilter) {
+      setSelectedTypes([initialFilter]);
+    }
+  }, [error, alertApi, initialFilter, setSelectedTypes, t]);
 
-  if (error) {
-    alertApi.post({
-      message: `Failed to load entity types`,
-      severity: 'error',
-    });
-    return null;
-  }
+  if (availableTypes.length === 0 || error) return null;
+
+  availableTypes.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
   const items = [
-    { value: 'all', label: 'All' },
-    ...types.map((type: string) => ({
+    { value: 'all', label: t('entityTypePicker.optionAllTitle') },
+    ...availableTypes.map((type: string) => ({
       value: type,
-      label: capitalize(type),
+      label: type,
     })),
   ];
 
-  return (
+  return hidden ? null : (
     <Box pb={1} pt={1}>
       <Select
-        label="Type"
+        label={t('entityTypePicker.title')}
         items={items}
-        selected={selectedType ?? 'all'}
-        onChange={value => setType(value === 'all' ? undefined : String(value))}
+        selected={(items.length > 1 ? selectedTypes[0] : undefined) ?? 'all'}
+        onChange={value =>
+          setSelectedTypes(value === 'all' ? [] : [String(value)])
+        }
       />
     </Box>
   );

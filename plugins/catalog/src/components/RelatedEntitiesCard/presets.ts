@@ -15,12 +15,13 @@
  */
 import {
   ComponentEntity,
+  DomainEntity,
   Entity,
   ResourceEntity,
   SystemEntity,
 } from '@backstage/catalog-model';
-import { TableColumn } from '@backstage/core';
 import { EntityTable } from '@backstage/plugin-catalog-react';
+import { TableColumn } from '@backstage/core-components';
 
 export const componentEntityColumns: TableColumn<ComponentEntity>[] = [
   EntityTable.columns.createEntityRefColumn({ defaultKind: 'component' }),
@@ -55,3 +56,13 @@ export const systemEntityHelpLink: string =
   'https://backstage.io/docs/features/software-catalog/descriptor-format#kind-system';
 export const asSystemEntities = (entities: Entity[]): SystemEntity[] =>
   entities as SystemEntity[];
+
+export const domainEntityColumns: TableColumn<DomainEntity>[] = [
+  EntityTable.columns.createEntityRefColumn({ defaultKind: 'domain' }),
+  EntityTable.columns.createOwnerColumn(),
+  EntityTable.columns.createMetadataDescriptionColumn(),
+];
+export const domainEntityHelpLink: string =
+  'https://backstage.io/docs/features/software-catalog/descriptor-format#kind-domain';
+export const asDomainEntities = (entities: Entity[]): DomainEntity[] =>
+  entities as DomainEntity[];

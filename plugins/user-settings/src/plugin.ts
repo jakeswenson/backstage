@@ -18,13 +18,13 @@ import {
   createPlugin,
   createRoutableExtension,
   createRouteRef,
-} from '@backstage/core';
+} from '@backstage/core-plugin-api';
 
 export const settingsRouteRef = createRouteRef({
-  path: '/settings',
-  title: 'Settings',
+  id: 'user-settings',
 });
 
+/** @public */
 export const userSettingsPlugin = createPlugin({
   id: 'user-settings',
   routes: {
@@ -32,8 +32,10 @@ export const userSettingsPlugin = createPlugin({
   },
 });
 
+/** @public */
 export const UserSettingsPage = userSettingsPlugin.provide(
   createRoutableExtension({
+    name: 'UserSettingsPage',
     component: () =>
       import('./components/SettingsPage').then(m => m.SettingsPage),
     mountPoint: settingsRouteRef,

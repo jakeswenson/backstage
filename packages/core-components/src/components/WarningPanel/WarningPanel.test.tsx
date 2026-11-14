@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
-import React from 'react';
 import { fireEvent, screen } from '@testing-library/react';
 import { renderInTestApp } from '@backstage/test-utils';
-import { Typography } from '@material-ui/core';
+import Typography from '@material-ui/core/Typography';
+import { WarningPanel, WarningProps } from './WarningPanel';
 
-import { WarningPanel } from './WarningPanel';
-
-const propsTitle = { title: 'Mock title' };
-const propsTitleMessage = { title: 'Mock title', message: 'Some more info' };
-const propsMessage = { message: 'Some more info' };
+const propsTitle: WarningProps = { title: 'Mock title' };
+const propsTitleMessage: WarningProps = {
+  title: 'Mock title',
+  message: 'Some more info',
+};
+const propsMessage: WarningProps = { message: 'Some more info' };
+const propsErrorMessage: WarningProps = {
+  severity: 'error',
+  title: 'Mock title',
+  message: 'Some more info',
+};
 
 describe('<WarningPanel />', () => {
   it('renders without exploding', async () => {
@@ -33,7 +39,7 @@ describe('<WarningPanel />', () => {
 
   it('renders title', async () => {
     await renderInTestApp(<WarningPanel {...propsTitleMessage} />);
-    const expandIcon = await screen.getByText('Warning: Mock title');
+    const expandIcon = screen.getByText('Warning: Mock title');
     fireEvent.click(expandIcon);
     expect(screen.getByText('Warning: Mock title')).toBeInTheDocument();
     expect(screen.getByText('Some more info')).toBeInTheDocument();
@@ -63,5 +69,24 @@ describe('<WarningPanel />', () => {
     expect(screen.getByText('Warning: Mock title')).toBeInTheDocument();
     expect(screen.getByText('Some more info')).toBeInTheDocument();
     expect(screen.getByText('Java stacktrace')).toBeInTheDocument();
+  });
+  it('renders message using severity', async () => {
+    await renderInTestApp(<WarningPanel {...propsErrorMessage} />);
+    expect(screen.getByText('Error: Mock title')).toBeInTheDocument();
+  });
+  it('renders a title formatted by markdown', async () => {
+    await renderInTestApp(
+      <WarningPanel
+        {...propsErrorMessage}
+        titleFormat="markdown"
+        title="Step has failed. [Help](https://commonmark.org/help)"
+      />,
+    );
+    expect(screen.getByText('Error: Step has failed.')).toBeInTheDocument();
+
+    expect(screen.getByText('Help')).toHaveAttribute(
+      'href',
+      'https://commonmark.org/help',
+    );
   });
 });

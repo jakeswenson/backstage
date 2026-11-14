@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Backstage Authors
+ * Copyright 2021 The Backstage Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,74 +14,14 @@
  * limitations under the License.
  */
 
-import React from 'react';
-import { makeStyles } from '@material-ui/core';
+import { useOutlet } from 'react-router-dom';
 import {
-  Content,
-  ContentHeader,
-  SupportButton,
-  TableColumn,
-} from '@backstage/core';
-import {
-  EntityKindPicker,
-  EntityLifecyclePicker,
-  EntityListProvider,
-  EntityOwnerPicker,
-  EntityTagPicker,
-  EntityTypePicker,
-  UserListFilterKind,
-  UserListPicker,
-} from '@backstage/plugin-catalog-react';
+  DefaultCatalogPage,
+  DefaultCatalogPageProps,
+} from './DefaultCatalogPage';
 
-import { CatalogTable } from '../CatalogTable';
-import { EntityRow } from '../CatalogTable/types';
-import CatalogLayout from './CatalogLayout';
-import { CreateComponentButton } from '../CreateComponentButton';
+export function CatalogPage(props: DefaultCatalogPageProps) {
+  const outlet = useOutlet();
 
-const useStyles = makeStyles(theme => ({
-  contentWrapper: {
-    display: 'grid',
-    gridTemplateAreas: "'filters' 'table'",
-    gridTemplateColumns: '250px 1fr',
-    gridColumnGap: theme.spacing(2),
-  },
-  buttonSpacing: {
-    marginLeft: theme.spacing(2),
-  },
-}));
-
-export type CatalogPageProps = {
-  initiallySelectedFilter?: UserListFilterKind;
-  columns?: TableColumn<EntityRow>[];
-};
-
-export const CatalogPage = ({
-  initiallySelectedFilter = 'owned',
-  columns,
-}: CatalogPageProps) => {
-  const styles = useStyles();
-
-  return (
-    <CatalogLayout>
-      <Content>
-        <ContentHeader title="Components">
-          <CreateComponentButton />
-          <SupportButton>All your software catalog entities</SupportButton>
-        </ContentHeader>
-        <div className={styles.contentWrapper}>
-          <EntityListProvider>
-            <div>
-              <EntityKindPicker initialFilter="component" hidden />
-              <EntityTypePicker />
-              <UserListPicker initialFilter={initiallySelectedFilter} />
-              <EntityOwnerPicker />
-              <EntityLifecyclePicker />
-              <EntityTagPicker />
-            </div>
-            <CatalogTable columns={columns} />
-          </EntityListProvider>
-        </div>
-      </Content>
-    </CatalogLayout>
-  );
-};
+  return outlet || <DefaultCatalogPage {...props} />;
+}

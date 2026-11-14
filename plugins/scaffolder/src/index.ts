@@ -14,17 +14,28 @@
  * limitations under the License.
  */
 
-export { scaffolderApiRef, ScaffolderClient } from './api';
-export type { ScaffolderApi } from './api';
-export {
-  createScaffolderFieldExtension,
-  ScaffolderFieldExtensions,
-} from './extensions';
+/**
+ * The Backstage plugin that helps you create new things
+ *
+ * @packageDocumentation
+ */
+export { ScaffolderClient } from './api';
+
 export {
   EntityPickerFieldExtension,
+  EntityNamePickerFieldExtension,
+  EntityTagsPickerFieldExtension,
   OwnerPickerFieldExtension,
+  OwnedEntityPickerFieldExtension,
+  MyGroupsPickerFieldExtension,
   RepoUrlPickerFieldExtension,
+  MultiEntityPickerFieldExtension,
+  RepoBranchPickerFieldExtension,
+  RepoOwnerPickerFieldExtension,
   ScaffolderPage,
-  scaffolderPlugin as plugin,
   scaffolderPlugin,
 } from './plugin';
+
+export * from './components';
+export * from './deprecated';
+export { scaffolderTranslationRef } from './translation';

@@ -15,3 +15,5 @@
  */
 
 export { createCatalogRegisterAction } from './register';
+export { createCatalogWriteAction } from './write';
+export { createFetchCatalogEntityAction } from './fetch';

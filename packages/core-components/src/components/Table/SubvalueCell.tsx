@@ -14,32 +14,48 @@
  * limitations under the License.
  */
 
-import React from 'react';
-import { BackstageTheme } from '@backstage/theme';
-import { makeStyles } from '@material-ui/core';
+import Box from '@material-ui/core/Box';
+import { makeStyles } from '@material-ui/core/styles';
+import { ReactNode } from 'react';
 
-const useSubvalueCellStyles = makeStyles<BackstageTheme>(theme => ({
-  value: {
-    marginBottom: '6px',
-  },
-  subvalue: {
-    color: theme.palette.textSubtle,
-    fontWeight: 'normal',
-  },
-}));
+/**
+ * @deprecated Use the replacement described in {@link SubvalueCell} instead.
+ * BUI components use their own props and styling contracts.
+ */
+export type SubvalueCellClassKey = 'value' | 'subvalue';
+
+const useSubvalueCellStyles = makeStyles(
+  theme => ({
+    value: {
+      marginBottom: theme.spacing(0.75),
+    },
+    subvalue: {
+      color: theme.palette.textSubtle,
+      fontWeight: 'normal',
+    },
+  }),
+  { name: 'BackstageSubvalueCell' },
+);
 
 type SubvalueCellProps = {
-  value: React.ReactNode;
-  subvalue: React.ReactNode;
+  value: ReactNode;
+  subvalue: ReactNode;
 };
 
-export const SubvalueCell = ({ value, subvalue }: SubvalueCellProps) => {
+/**
+ * @deprecated Use `CellText` from `@backstage/ui` in a BUI table instead,
+ * with string `title` and `description` props. It renders a complete table
+ * cell, rather than content for an existing cell. For custom React content,
+ * compose BUI `Cell` and `Text` instead.
+ */
+export function SubvalueCell(props: SubvalueCellProps) {
+  const { value, subvalue } = props;
   const classes = useSubvalueCellStyles();
 
   return (
     <>
-      <div className={classes.value}>{value}</div>
-      <div className={classes.subvalue}>{subvalue}</div>
+      <Box className={classes.value}>{value}</Box>
+      <Box className={classes.subvalue}>{subvalue}</Box>
     </>
   );
-};
+}

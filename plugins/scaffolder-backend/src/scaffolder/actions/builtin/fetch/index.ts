@@ -15,4 +15,8 @@
  */
 
 export { createFetchPlainAction } from './plain';
-export { createFetchCookiecutterAction } from './cookiecutter';
+export { createFetchPlainFileAction } from './plainFile';
+export { createFetchTemplateAction } from './template';
+export { createFetchTemplateFileAction } from './templateFile';
+export { createWorkspaceTemplateAction } from './workspaceTemplate';
+export { createWorkspaceTemplateFileAction } from './workspaceTemplateFile';

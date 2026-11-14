@@ -14,30 +14,91 @@
  * limitations under the License.
  */
 
-export * from './components/AboutCard';
-export { CatalogLayout } from './components/CatalogPage';
-export { CatalogResultListItem } from './components/CatalogResultListItem';
-export { CatalogTable } from './components/CatalogTable';
-export type { EntityRow as CatalogTableRow } from './components/CatalogTable';
-export { CreateComponentButton } from './components/CreateComponentButton';
-export { EntityLayout } from './components/EntityLayout';
+/**
+ * The Backstage plugin for browsing the Backstage catalog
+ *
+ * @packageDocumentation
+ */
+
+export * from './apis';
+
+export type {
+  AboutContentProps,
+  AboutFieldProps,
+} from './components/AboutCard';
+export { AboutContent, AboutField } from './components/AboutCard';
+export * from './components/CatalogKindHeader';
+export * from './components/CatalogTable';
+export * from './components/EntityLayout';
 export * from './components/EntityOrphanWarning';
-export { EntityPageLayout } from './components/EntityPageLayout';
+export * from './components/EntityRelationWarning';
+export * from './components/EntityProcessingErrorsPanel';
 export * from './components/EntitySwitch';
-export { Router } from './components/Router';
+export * from './components/FilteredEntityLayout';
+export * from './overridableComponents';
+export * from './components/EntityLabelsCard';
+export * from './components/CatalogSearchResultListItem';
 export {
   CatalogEntityPage,
   CatalogIndexPage,
   catalogPlugin,
-  catalogPlugin as plugin,
   EntityAboutCard,
-  EntityDependsOnComponentsCard,
   EntityDependencyOfComponentsCard,
+  EntityDependsOnComponentsCard,
   EntityDependsOnResourcesCard,
   EntityHasComponentsCard,
   EntityHasResourcesCard,
   EntityHasSubcomponentsCard,
+  EntityHasSubdomainsCard,
   EntityHasSystemsCard,
   EntityLinksCard,
-  EntitySystemDiagramCard,
+  EntityLabelsCard,
+  RelatedEntitiesCard,
+  CatalogSearchResultListItem,
 } from './plugin';
+
+export type {
+  DependencyOfComponentsCardLegacyProps,
+  DependencyOfComponentsCardProps,
+} from './components/DependencyOfComponentsCard';
+export type {
+  DependsOnComponentsCardLegacyProps,
+  DependsOnComponentsCardProps,
+} from './components/DependsOnComponentsCard';
+export type {
+  DependsOnResourcesCardLegacyProps,
+  DependsOnResourcesCardProps,
+} from './components/DependsOnResourcesCard';
+export type {
+  EntityLinksEmptyStateClassKey,
+  EntityLinksCardProps,
+  Breakpoint,
+  ColumnBreakpoints,
+} from './components/EntityLinksCard';
+export type { SystemDiagramCardClassKey } from './components/SystemDiagramCard';
+export type { DefaultCatalogPageProps } from './components/CatalogPage';
+export type { EntityContextMenuClassKey } from './components/EntityContextMenu';
+export type {
+  HasComponentsCardLegacyProps,
+  HasComponentsCardProps,
+} from './components/HasComponentsCard';
+export type {
+  HasResourcesCardLegacyProps,
+  HasResourcesCardProps,
+} from './components/HasResourcesCard';
+export type {
+  HasSubcomponentsCardLegacyProps,
+  HasSubcomponentsCardProps,
+} from './components/HasSubcomponentsCard';
+export type {
+  HasSubdomainsCardLegacyProps,
+  HasSubdomainsCardProps,
+} from './components/HasSubdomainsCard';
+export type {
+  HasSystemsCardLegacyProps,
+  HasSystemsCardProps,
+} from './components/HasSystemsCard';
+export type { RelatedEntitiesCardProps } from './components/RelatedEntitiesCard';
+export type { CatalogSearchResultListItemProps } from './components/CatalogSearchResultListItem';
+export * from './components/CatalogExportButton';
+export { catalogTranslationRef } from './alpha/translation';

@@ -14,42 +14,57 @@
  * limitations under the License.
  */
 
-import { EntityName } from '@backstage/catalog-model';
+import { CompoundEntityRef } from '@backstage/catalog-model';
 import { Config } from '@backstage/config';
-import { DiscoveryApi, IdentityApi } from '@backstage/core';
-import { NotFoundError } from '@backstage/errors';
-import { SyncResult, TechDocsApi, TechDocsStorageApi } from './api';
-import { TechDocsEntityMetadata, TechDocsMetadata } from './types';
+import {
+  DiscoveryApi,
+  FetchApi,
+  IdentityApi,
+} from '@backstage/core-plugin-api';
+import { NotFoundError, ResponseError } from '@backstage/errors';
+import {
+  SyncResult,
+  TechDocsApi,
+  TechDocsEntityMetadata,
+  TechDocsMetadata,
+  TechDocsStorageApi,
+} from '@backstage/plugin-techdocs-react';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 
 /**
- * API to talk to techdocs-backend.
+ * API to talk to `techdocs-backend`.
  *
- * @property {string} apiOrigin Set to techdocs.requestUrl as the URL for techdocs-backend API
+ * @public
  */
 export class TechDocsClient implements TechDocsApi {
   public configApi: Config;
   public discoveryApi: DiscoveryApi;
-  public identityApi: IdentityApi;
+  private fetchApi: FetchApi;
 
-  constructor({
-    configApi,
-    discoveryApi,
-    identityApi,
-  }: {
+  constructor(options: {
     configApi: Config;
     discoveryApi: DiscoveryApi;
-    identityApi: IdentityApi;
+    fetchApi: FetchApi;
   }) {
-    this.configApi = configApi;
-    this.discoveryApi = discoveryApi;
-    this.identityApi = identityApi;
+    this.configApi = options.configApi;
+    this.discoveryApi = options.discoveryApi;
+    this.fetchApi = options.fetchApi;
+  }
+
+  public async getCookie(): Promise<{ expiresAt: string }> {
+    const apiOrigin = await this.getApiOrigin();
+    const requestUrl = `${apiOrigin}/cookie`;
+    const response = await this.fetchApi.fetch(`${requestUrl}`, {
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      throw await ResponseError.fromResponse(response);
+    }
+    return await response.json();
   }
 
   async getApiOrigin(): Promise<string> {
-    return (
-      this.configApi.getOptionalString('techdocs.requestUrl') ??
-      (await this.discoveryApi.getBaseUrl('techdocs'))
-    );
+    return await this.discoveryApi.getBaseUrl('techdocs');
   }
 
   /**
@@ -59,21 +74,21 @@ export class TechDocsClient implements TechDocsApi {
    * static files. It includes necessary data about the docs site. This method requests techdocs-backend
    * which retrieves the TechDocs metadata.
    *
-   * @param {EntityName} entityId Object containing entity data like name, namespace, etc.
+   * @param entityId - Object containing entity data like name, namespace, etc.
    */
-  async getTechDocsMetadata(entityId: EntityName): Promise<TechDocsMetadata> {
+  async getTechDocsMetadata(
+    entityId: CompoundEntityRef,
+  ): Promise<TechDocsMetadata> {
     const { kind, namespace, name } = entityId;
 
     const apiOrigin = await this.getApiOrigin();
     const requestUrl = `${apiOrigin}/metadata/techdocs/${namespace}/${kind}/${name}`;
-    const token = await this.identityApi.getIdToken();
+    const request = await this.fetchApi.fetch(`${requestUrl}`);
+    if (!request.ok) {
+      throw await ResponseError.fromResponse(request);
+    }
 
-    const request = await fetch(`${requestUrl}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    const res = await request.json();
-
-    return res;
+    return await request.json();
   }
 
   /**
@@ -82,55 +97,49 @@ export class TechDocsClient implements TechDocsApi {
    * This method requests techdocs-backend which uses the catalog APIs to respond with filtered
    * information required here.
    *
-   * @param {EntityName} entityId Object containing entity data like name, namespace, etc.
+   * @param entityId - Object containing entity data like name, namespace, etc.
    */
   async getEntityMetadata(
-    entityId: EntityName,
+    entityId: CompoundEntityRef,
   ): Promise<TechDocsEntityMetadata> {
     const { kind, namespace, name } = entityId;
 
     const apiOrigin = await this.getApiOrigin();
     const requestUrl = `${apiOrigin}/metadata/entity/${namespace}/${kind}/${name}`;
-    const token = await this.identityApi.getIdToken();
 
-    const request = await fetch(`${requestUrl}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    const res = await request.json();
+    const request = await this.fetchApi.fetch(`${requestUrl}`);
+    if (!request.ok) {
+      throw await ResponseError.fromResponse(request);
+    }
 
-    return res;
+    return await request.json();
   }
 }
 
 /**
  * API which talks to TechDocs storage to fetch files to render.
  *
- * @property {string} apiOrigin Set to techdocs.requestUrl as the URL for techdocs-backend API
+ * @public
  */
 export class TechDocsStorageClient implements TechDocsStorageApi {
   public configApi: Config;
   public discoveryApi: DiscoveryApi;
-  public identityApi: IdentityApi;
+  private fetchApi: FetchApi;
 
-  constructor({
-    configApi,
-    discoveryApi,
-    identityApi,
-  }: {
+  constructor(options: {
     configApi: Config;
     discoveryApi: DiscoveryApi;
-    identityApi: IdentityApi;
+    fetchApi: FetchApi;
+    /** @deprecated identityApi is not needed any more */
+    identityApi?: IdentityApi;
   }) {
-    this.configApi = configApi;
-    this.discoveryApi = discoveryApi;
-    this.identityApi = identityApi;
+    this.configApi = options.configApi;
+    this.discoveryApi = options.discoveryApi;
+    this.fetchApi = options.fetchApi;
   }
 
   async getApiOrigin(): Promise<string> {
-    return (
-      this.configApi.getOptionalString('techdocs.requestUrl') ??
-      (await this.discoveryApi.getBaseUrl('techdocs'))
-    );
+    return await this.discoveryApi.getBaseUrl('techdocs');
   }
 
   async getStorageUrl(): Promise<string> {
@@ -141,29 +150,28 @@ export class TechDocsStorageClient implements TechDocsStorageApi {
   }
 
   async getBuilder(): Promise<string> {
-    return this.configApi.getString('techdocs.builder');
+    return this.configApi.getOptionalString('techdocs.builder') || 'local';
   }
 
   /**
    * Fetch HTML content as text for an individual docs page in an entity's docs site.
    *
-   * @param {EntityName} entityId Object containing entity data like name, namespace, etc.
-   * @param {string} path The unique path to an individual docs page e.g. overview/what-is-new
-   * @returns {string} HTML content of the docs page as string
-   * @throws {Error} Throws error when the page is not found.
+   * @param entityId - Object containing entity data like name, namespace, etc.
+   * @param path - The unique path to an individual docs page e.g. overview/what-is-new
+   * @returns HTML content of the docs page as string
+   * @throws Throws error when the page is not found.
    */
-  async getEntityDocs(entityId: EntityName, path: string): Promise<string> {
+  async getEntityDocs(
+    entityId: CompoundEntityRef,
+    path: string,
+  ): Promise<string> {
     const { kind, namespace, name } = entityId;
 
     const storageUrl = await this.getStorageUrl();
     const url = `${storageUrl}/${namespace}/${kind}/${name}/${path}`;
-    const token = await this.identityApi.getIdToken();
 
-    const request = await fetch(
+    const request = await this.fetchApi.fetch(
       `${url.endsWith('/') ? url : `${url}/`}index.html`,
-      {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      },
     );
 
     let errorMessage = '';
@@ -191,58 +199,62 @@ export class TechDocsStorageClient implements TechDocsStorageApi {
   /**
    * Check if docs are on the latest version and trigger rebuild if not
    *
-   * @param {EntityName} entityId Object containing entity data like name, namespace, etc.
-   * @returns {SyncResult} Whether documents are currently synchronized to newest version
-   * @throws {Error} Throws error on error from sync endpoint in Techdocs Backend
+   * @param entityId - Object containing entity data like name, namespace, etc.
+   * @param logHandler - Callback to receive log messages from the build process
+   * @returns Whether documents are currently synchronized to newest version
+   * @throws Throws error on error from sync endpoint in TechDocs Backend
    */
-  async syncEntityDocs(entityId: EntityName): Promise<SyncResult> {
+  async syncEntityDocs(
+    entityId: CompoundEntityRef,
+    logHandler: (line: string) => void = () => {},
+  ): Promise<SyncResult> {
     const { kind, namespace, name } = entityId;
 
     const apiOrigin = await this.getApiOrigin();
     const url = `${apiOrigin}/sync/${namespace}/${kind}/${name}`;
-    const token = await this.identityApi.getIdToken();
-    let request;
-    let attempts: number = 0;
-    // retry if request times out, up to 5 times
-    // can happen due to docs taking too long to generate
-    while (!request || (request.status === 408 && attempts < 5)) {
-      attempts++;
-      request = await fetch(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+
+    return new Promise((resolve, reject) => {
+      const ctrl = new AbortController();
+      fetchEventSource(url, {
+        fetch: this.fetchApi.fetch,
+        signal: ctrl.signal,
+        onmessage(e: any) {
+          if (e.event === 'log') {
+            if (e.data) {
+              logHandler(JSON.parse(e.data));
+            }
+          } else if (e.event === 'finish') {
+            let updated: boolean = false;
+            if (e.data) {
+              ({ updated } = JSON.parse(e.data));
+            }
+            resolve(updated ? 'updated' : 'cached');
+          } else if (e.event === 'error') {
+            reject(new Error(e.data));
+          }
+        },
+        onerror(err) {
+          ctrl.abort();
+          reject(err);
+          throw err; // rethrow to stop the operation
+        },
       });
-    }
-
-    switch (request.status) {
-      case 404:
-        throw new NotFoundError((await request.json()).error);
-
-      case 200:
-      case 304:
-        return 'cached';
-
-      case 201:
-        return 'updated';
-
-      // for timeout and misc errors, handle without error to allow viewing older docs
-      // if older docs not available,
-      // Reader will show 404 error coming from getEntityDocs
-      case 408:
-      default:
-        return 'timeout';
-    }
+    });
   }
 
   async getBaseUrl(
     oldBaseUrl: string,
-    entityId: EntityName,
+    entityId: CompoundEntityRef,
     path: string,
   ): Promise<string> {
     const { kind, namespace, name } = entityId;
 
     const apiOrigin = await this.getApiOrigin();
+    const newBaseUrl = `${apiOrigin}/static/docs/${namespace}/${kind}/${name}/${path}`;
+
     return new URL(
       oldBaseUrl,
-      `${apiOrigin}/static/docs/${namespace}/${kind}/${name}/${path}`,
+      newBaseUrl.endsWith('/') ? newBaseUrl : `${newBaseUrl}/`,
     ).toString();
   }
 }

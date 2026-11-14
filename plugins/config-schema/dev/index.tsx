@@ -16,7 +16,6 @@
 
 import { createDevApp } from '@backstage/dev-utils';
 import { Schema } from 'jsonschema';
-import React from 'react';
 import Observable from 'zen-observable';
 import { configSchemaApiRef } from '../src/api';
 import { ConfigSchemaResult } from '../src/api/types';
@@ -31,7 +30,7 @@ createDevApp()
     factory: () => ({
       schema$: () =>
         new Observable<ConfigSchemaResult>(sub =>
-          sub.next({ schema: (exampleSchema as unknown) as Schema }),
+          sub.next({ schema: exampleSchema as unknown as Schema }),
         ),
     }),
   })

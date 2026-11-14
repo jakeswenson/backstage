@@ -13,5 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { CatalogLayout } from './CatalogLayout';
+
 export { CatalogPage } from './CatalogPage';
+export {
+  BaseCatalogPage,
+  DefaultCatalogPage,
+  NfsDefaultCatalogPage,
+} from './DefaultCatalogPage';
+export type {
+  BaseCatalogPageProps,
+  DefaultCatalogPageProps,
+} from './DefaultCatalogPage';
